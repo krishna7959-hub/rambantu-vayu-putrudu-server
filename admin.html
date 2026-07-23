@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel</title>
+
+<link rel="stylesheet" href="admin.css">
+
+</head>
+
+<body>
+<script>
+  if (localStorage.getItem("adminLogin") !== "true") {
+    window.location.href = "login.html";
+  }
+</script>
+<div class="container">
+
+<h2>📰 News Upload</h2>
+
+<input type="text" id="title" placeholder="News Title">
+
+<textarea id="details" rows="6" placeholder="News Details"></textarea>
+<select id="category">
+
+  <option value="">Select Category</option>
+  
+  <option value="Politics">Politics</option>
+  
+  <option value="Devotional">Devotional</option>
+  
+  <option value="Sports">Sports</option>
+  
+  <option value="Cinema">Cinema</option>
+  
+  <option value="Business">Business</option>
+  
+  <option value="Technology">Technology</option>
+  
+  <option value="National">National</option>
+  
+  <option value="International">International</option>
+  
+</select>
+<input type="file" id="image">
+<hr>
+
+<h3>🚨 Breaking News</h3>
+
+<input type="text" id="breakingNews" placeholder="Enter Breaking News">
+
+<button id="saveBreaking">Save Breaking News</button>
+
+<hr>
+<button id="publish">Publish</button>
+<hr>
+
+<h2>📋 Published News</h2>
+
+<div id="newsList"></div>
+</div>
+
+<script type="module" src="firebase.js"></script>
+<script type="module" src="script.js"></script>
+
+</body>
+</html>

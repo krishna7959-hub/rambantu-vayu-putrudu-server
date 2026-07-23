@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rambantu Vayu Putrudu</title>
+
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function(OneSignal) {
+  await OneSignal.init({
+  appId: "ca312fa3-511f-4b36-ab0e-8d774ab70cfc",
+  notifyButton: {
+    enable: true,
+  },
+});
+
+await OneSignal.Notifications.requestPermission();
+
+console.log("Permission:", OneSignal.Notifications.permission);
+console.log("Subscribed:", await OneSignal.User.PushSubscription.optedIn);
+
+});
+</script>
+
+</head>
+
+<body>
+
+<header class="header">
+
+  <div class="logo">
+    📰 <b>Rambantu Vayu Putrudu</b>
+  </div>
+
+  <div class="search-box">
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Search News..."
+      onkeyup="searchNews()">
+  </div>
+
+</header>
+
+<div id="featuredNews"></div>
+
+<nav>
+    <a href="#">🏠 Home</a>
+    <a href="#">🏛 Politics</a>
+    <a href="#">🛕 Devotional</a>
+    <a href="#">🏏 Cricket</a>
+    <a href="#">🎬 Cinema</a>
+    <a href="#">🎥 Videos</a>
+    <a href="#">📞 Contact</a>
+</nav>
+
+<div class="breaking-news">
+  
+  <span class="breaking-label">BREAKING</span>
+  
+  <marquee id="breakingText" behavior="scroll" direction="left">
+    Loading Breaking News...
+  </marquee>
+  
+</div>
+
+<section class="hero">
+
+<h2>స్వాగతం</h2>
+
+<p>
+Rambantu Vayu Putrudu తెలుగు న్యూస్ పోర్టల్‌కు
+మీ అందరికీ హృదయపూర్వక స్వాగతం.
+</p>
+
+</section>
+
+<section class="latest">
+
+  
+  <h2>Latest News</h2>
+  <div class="category-menu">
+    
+    <button onclick="filterNews('All')">All</button>
+    
+    <button onclick="filterNews('Politics')">Politics</button>
+    
+    <button onclick="filterNews('Devotional')">Devotional</button>
+    
+    <button onclick="filterNews('Sports')">Sports</button>
+    
+    <button onclick="filterNews('Cinema')">Cinema</button>
+    
+    <button onclick="filterNews('Business')">Business</button>
+    
+    <button onclick="filterNews('Technology')">Technology</button>
+    
+</div>
+  <div id="newsContainer"></div>
+
+  
+</section>
+<script type="module" src="firebase.js"></script>
+<script type="module" src="index.js"></script>
+<button id="topBtn" onclick="topFunction()">⬆</button>
+</body>
+</html>
