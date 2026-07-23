@@ -46,6 +46,7 @@ let editMode = false;
 let editId = "";
 
 publishBtn.addEventListener("click", async () => {
+console.log("Publish button clicked");
 
   const title = document.getElementById("title").value.trim();
   const details = document.getElementById("details").value.trim();
@@ -103,25 +104,21 @@ publishBtn.addEventListener("click", async () => {
         image: imageURL,
         createdAt: new Date()
       });
-try {
-  const response = await fetch("https://rambantu-vayu-putrudu-server.onrender.com/send", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      title: title,
-      message: details.substring(0, 100),
-      url: "https://rambantu-vayu-putrudu.web.app"
-    })
-  });
+console.log("News saved to Firestore");
 
-  console.log("Response:", await response.text());
+console.log("Sending notification...");
 
-} catch (err) {
-  console.error("Fetch Error:", err);
-}
-  
+await fetch("https://rambantu-vayu-putrudu-server.onrender.com/send", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    title: title,
+    message: details.substring(0, 100),
+    url: "https://rambantu-vayu-putrudu.web.app"
+  })
+});
       alert("వార్త విజయవంతంగా Publish అయింది!");
     }
 
