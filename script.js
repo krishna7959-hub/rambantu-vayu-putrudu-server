@@ -103,7 +103,7 @@ publishBtn.addEventListener("click", async () => {
         image: imageURL,
         createdAt: new Date()
       });
-await fetch("http://localhost:3000/send", {
+await fetch("https://rambantu-vayu-putrudu-server.onrender.com/send", {
   method: "POST",
   headers: {
     "Content-Type": "application/json"
