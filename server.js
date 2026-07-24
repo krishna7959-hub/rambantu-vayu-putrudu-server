@@ -16,19 +16,19 @@ console.log("Received /send request");
 console.log(req.body);
   try {
     const notification = {
-      contents: {
-        en: req.body.message
-      },
-      headings: {
-        en: req.body.title
-      },
-      include_subscription_ids: [
-  "cd8c2b86-10a7-481a-9edd-87dff4c1273d",
-  "d1eb7680-03d9-4465-bc10-163424ef4fab"
-],
-target_channel: "push",
-      url: req.body.url
-    };
+  contents: {
+    en: req.body.message
+  },
+  headings: {
+    en: req.body.title
+  },
+  include_subscription_ids: [
+    "cd8c2b86-10a7-481a-9edd-87dff4c1273d",
+    "d1eb7680-03d9-4465-bc10-163424ef4fab"
+  ],
+  target_channel: "push",
+  chrome_web_icon: "https://rambantu-vayu-putrudu.web.app/icon-192.png"
+};
 
     const response = await client.createNotification(notification);
 console.log("OneSignal Response:", response);
