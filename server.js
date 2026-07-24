@@ -27,13 +27,13 @@ console.log(req.body);
     };
 
     const response = await client.createNotification(notification);
-
+console.log("OneSignal Response:", response);
     res.json(response);
 
   } catch (err) {
-    console.log(err);
-    res.status(500).send("Notification Failed");
-  }
+  console.error("OneSignal Error:", err);
+  res.status(500).json(err);
+}
 });
 
 app.listen(3000, () => {
