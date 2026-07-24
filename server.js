@@ -12,6 +12,8 @@ const client = new OneSignal.Client(
   process.env.ONESIGNAL_API_KEY
 );
 app.post("/send", async (req, res) => {
+console.log("Received /send request");
+console.log(req.body);
   try {
     const notification = {
       contents: {
