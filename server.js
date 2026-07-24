@@ -29,6 +29,7 @@ console.log(req.body);
   target_channel: "push",
   url: req.body.url
 };
+console.log("Notification Object:", notification);
     const response = await client.createNotification(notification);
 console.log("OneSignal Response:", response);
     res.json(response);
