@@ -22,7 +22,11 @@ console.log(req.body);
       headings: {
         en: req.body.title
       },
-      included_segments: ["Subscribed Users"],
+      include_subscription_ids: [
+  "e0f451bf-5457-4e3b-8e54-18df63d5078f",
+  "d1eb7680-03d9-4465-bc10-163424ef4fab"
+],
+target_channel: "push",
       url: req.body.url
     };
 
