@@ -108,7 +108,7 @@ console.log("News saved to Firestore");
 
 console.log("Sending notification...");
 
-await fetch("https://rambantu-vayu-putrudu-server.onrender.com/send", {
+const response = await fetch("https://rambantu-vayu-putrudu-server.onrender.com/send", {
   method: "POST",
   headers: {
     "Content-Type": "application/json"
@@ -119,7 +119,10 @@ await fetch("https://rambantu-vayu-putrudu-server.onrender.com/send", {
     url: "https://rambantu-vayu-putrudu.web.app"
   })
 });
-      alert("వార్త విజయవంతంగా Publish అయింది!");
+
+console.log(await response.text());
+
+alert("వార్త విజయవంతంగా Publish అయింది!");
     }
 
     document.getElementById("title").value = "";

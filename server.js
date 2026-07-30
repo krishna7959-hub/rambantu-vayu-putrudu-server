@@ -31,8 +31,11 @@ console.log(req.body);
 };
 console.log("Notification Object:", notification);
     const response = await client.createNotification(notification);
-console.log("OneSignal Response:", response);
-    res.json(response);
+
+console.log("Status:", response.statusCode);
+console.log("Body:", response.body);
+
+res.json(response.body);
 
   } catch (err) {
   console.error("OneSignal Error:", err);
