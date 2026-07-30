@@ -23,9 +23,9 @@ console.log(req.body);
     en: req.body.title
   },
   include_subscription_ids: [
-    "cd8c2b86-10a7-481a-9edd-87dff4c1273d",
-    "d1eb7680-03d9-4465-bc10-163424ef4fab"
-  ],
+  "cd8c2b86-10a7-481a-9edd-87dff4c1273d",
+  "6bc2b743-de26-4cb3-9c86-577a36ffe333"
+],
   target_channel: "push",
   url: req.body.url
 };
