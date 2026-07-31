@@ -22,9 +22,8 @@ console.log(req.body);
   headings: {
     en: req.body.title
   },
-  include_subscription_ids: [
-  "cd8c2b86-10a7-481a-9edd-87dff4c1273d",
-  "6bc2b743-de26-4bc3-9c86-577a36fe0333"
+ include_subscription_ids: [
+  "43cefd57-419c-4466-953e-dbd3a7c89bab"
 ],
   target_channel: "push",
   url: "https://google.com"
