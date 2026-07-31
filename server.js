@@ -1,47 +1,52 @@
 const express = require("express");
 const cors = require("cors");
-const OneSignal = require("onesignal-node");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-const client = new OneSignal.Client(
-  "ca312fa3-511f-4b36-ab0e-8d774ab70cfc",
-  process.env.ONESIGNAL_API_KEY
-);
 app.post("/send", async (req, res) => {
-console.log("Received /send request");
-console.log(req.body);
   try {
-    const notification = {
-  contents: {
-    en: req.body.message
-  },
-  headings: {
-    en: req.body.title
-  },
- include_subscription_ids: [
-  "43cefd57-419c-4466-953e-dbd3a7c89bab"
-],
-  target_channel: "push",
-  url: "https://google.com"
-};
-console.log("Notification Object:", notification);
-    const response = await client.createNotification(notification);
+    console.log("Received:", req.body);
 
-console.log("Status:", response.statusCode);
-console.log("Body:", response.body);
+    const response = await fetch("https://api.onesignal.com/notifications?c=push", {
+      method: "POST",
+      headers: {
+        "Authorization": `Key ${process.env.ONESIGNAL_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        app_id: process.env.ONESIGNAL_APP_ID,
+        include_subscription_ids: [
+          "6bc2b743-de26-4bc3-9c86-577a36fe0333",
+          "43cefd57-419c-4466-953e-dbd3a7c89bab"
+        ],
+        headings: {
+          en: req.body.title
+        },
+        contents: {
+          en: req.body.message
+        },
+        target_channel: "push",
+        url: req.body.url
+      })
+    });
 
-res.json(response.body);
+    const data = await response.json();
+
+    console.log("OneSignal Response:", data);
+
+    res.json(data);
 
   } catch (err) {
-  console.error("OneSignal Error:", err);
-  res.status(500).json(err);
-}
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("Server running on", PORT);
 });
