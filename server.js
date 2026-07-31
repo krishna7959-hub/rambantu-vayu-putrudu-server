@@ -27,7 +27,7 @@ console.log(req.body);
   "6bc2b743-de26-4cb3-9c86-577a36ffe333"
 ],
   target_channel: "push",
-  url: req.body.url
+  url: "https://google.com"
 };
 console.log("Notification Object:", notification);
     const response = await client.createNotification(notification);
