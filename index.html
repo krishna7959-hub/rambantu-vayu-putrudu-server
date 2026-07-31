@@ -11,17 +11,18 @@
 <script>
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 OneSignalDeferred.push(async function(OneSignal) {
+
   await OneSignal.init({
-  appId: "ca312fa3-511f-4b36-ab0e-8d774ab70cfc",
-  notifyButton: {
-    enable: true,
-  },
-});
+    appId: "ca312fa3-511f-4b36-ab0e-8d774ab70cfc",
+    allowLocalhostAsSecureOrigin: true,
+    notifyButton: {
+      enable: true
+    }
+  });
 
-await OneSignal.Notifications.requestPermission();
-
-console.log("Permission:", OneSignal.Notifications.permission);
-console.log("Subscribed:", await OneSignal.User.PushSubscription.optedIn);
+  console.log("Permission:", OneSignal.Notifications.permission);
+  console.log("Subscribed:", await OneSignal.User.PushSubscription.optedIn);
+  console.log("Subscription ID:", OneSignal.User.PushSubscription.id);
 
 });
 </script>
