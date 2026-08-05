@@ -28,8 +28,9 @@ app.post("/send", async (req, res) => {
   target_channel: "push",
   url: req.body.url
 })
+});
 
-    const data = await response.json();
+const data = await response.json();
 
     console.log("OneSignal Response:", data);
 
