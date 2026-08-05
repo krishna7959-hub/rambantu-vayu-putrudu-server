@@ -1,4 +1,4 @@
-import { db, messaging, getToken } from "./firebase.js";
+import { db } from "./firebase.js";
 import {
   collection,
   getDocs,
