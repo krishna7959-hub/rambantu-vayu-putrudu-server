@@ -226,24 +226,7 @@ async function requestNotificationPermission() {
 }
 
 requestNotificationPermission();
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker
-    .register("./firebase-messaging-sw.js")
-    .then(async (registration) => {
-      console.log("Service Worker Registered");
 
-      try {
-        const token = await getToken(messaging, {
-          vapidKey: "BBxPdJ2khs9gq1jLaZM_dcFg4Xj-59qh1zKmS1bpM1DcGm0D8L9ZMQqtInIBORQcSyZkPbrRzBgAW7hUiJQYzGA",
-          serviceWorkerRegistration: registration,
-        });
-
-        if (token) {
-
-  await setDoc(doc(db, "fcmTokens", token), {
-    token: token,
-    createdAt: new Date()
-  });
 
   console.log("FCM Token Saved:", token);
 
