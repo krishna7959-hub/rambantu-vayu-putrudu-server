@@ -19,7 +19,6 @@ app.post("/send", async (req, res) => {
       body: JSON.stringify({
         app_id: process.env.ONESIGNAL_APP_ID,
         include_subscription_ids: [
-  "6bc2b743-de26-4bc3-9c86-577a36fe0333",
   "43cefd57-419c-4466-953e-dbd3a7c89bab"
 ],
         headings: {
