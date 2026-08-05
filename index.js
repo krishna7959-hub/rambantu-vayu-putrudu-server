@@ -225,19 +225,3 @@ async function requestNotificationPermission() {
   }
 }
 
-requestNotificationPermission();
-
-
-  console.log("FCM Token Saved:", token);
-
-} else {
-  console.log("No registration token available.");
-}   
-      } catch (err) {
-        console.error("Error getting token:", err);
-      }
-    })
-    .catch((err) => {
-      console.error("Service Worker registration failed:", err);
-    });
-}

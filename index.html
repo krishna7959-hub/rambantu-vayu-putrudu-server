@@ -13,12 +13,13 @@ window.OneSignalDeferred = window.OneSignalDeferred || [];
 OneSignalDeferred.push(async function(OneSignal) {
 
   await OneSignal.init({
-    appId: "ca312fa3-511f-4b36-ab0e-8d774ab70cfc",
-    allowLocalhostAsSecureOrigin: true,
+    appId: "YOUR_APP_ID",
+    autoResubscribe: true,
+    serviceWorkerPath: "OneSignalSDKWorker.js",
     notifyButton: {
       enable: true
     }
-  });
+});
 
   console.log("Permission:", OneSignal.Notifications.permission);
   console.log("Subscribed:", await OneSignal.User.PushSubscription.optedIn);
