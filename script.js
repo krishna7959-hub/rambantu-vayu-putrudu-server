@@ -108,22 +108,27 @@ console.log("News saved to Firestore");
 
 console.log("Sending notification...");
 
-const response = await fetch("https://rambantu-vayu-putrudu-server.onrender.com/send", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    title: title,
-    message: details.substring(0, 100),
-    url: "https://rambantu-vayu-putrudu.web.app"
-  })
-});
+try {
+  const response = await fetch("https://rambantu-vayu-putrudu-server.onrender.com/send", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      title: title,
+      message: details.substring(0, 100),
+      url: "https://rambantu-vayu-putrudu.web.app"
+    })
+  });
 
-console.log(await response.text());
+  console.log("Status:", response.status);
+  console.log("Response:", await response.text());
+
+} catch (e) {
+  console.error("Fetch Error:", e);
+}
 
 alert("వార్త విజయవంతంగా Publish అయింది!");
-    }
 
     document.getElementById("title").value = "";
     document.getElementById("details").value = "";
