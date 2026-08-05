@@ -17,20 +17,17 @@ app.post("/send", async (req, res) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        app_id: process.env.ONESIGNAL_APP_ID,
-        include_subscription_ids: [
-  "43cefd57-419c-4466-953e-dbd3a7c89bab"
-],
-        headings: {
-          en: req.body.title
-        },
-        contents: {
-          en: req.body.message
-        },
-        target_channel: "push",
-        url: req.body.url
-      })
-    });
+  app_id: process.env.ONESIGNAL_APP_ID,
+  included_segments: ["Subscribed Users"],
+  headings: {
+    en: req.body.title
+  },
+  contents: {
+    en: req.body.message
+  },
+  target_channel: "push",
+  url: req.body.url
+})
 
     const data = await response.json();
 

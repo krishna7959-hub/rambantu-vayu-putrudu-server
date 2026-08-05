@@ -21,6 +21,12 @@ async function loadNews() {
     );
     
     const snapshot = await getDocs(q);
+
+console.log("Documents Count:", snapshot.size);
+
+snapshot.forEach((doc) => {
+    console.log(doc.id, doc.data());
+});
     
     allNews = [];
     
