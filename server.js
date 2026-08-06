@@ -32,6 +32,7 @@ app.post("/send", async (req, res) => {
   target_channel: "push",
   url: req.body.url
 })
+});
 
 const data = await response.json();
 
