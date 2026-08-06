@@ -19,11 +19,11 @@ OneSignalDeferred.push(async function(OneSignal) {
     notifyButton: {
       enable: true
     }
-});
+  });
 
-  console.log("Permission:", OneSignal.Notifications.permission);
-  console.log("Subscribed:", await OneSignal.User.PushSubscription.optedIn);
-  console.log("Subscription ID:", OneSignal.User.PushSubscription.id);
+  await OneSignal.Notifications.requestPermission();
+
+  alert("Subscription ID: " + OneSignal.User.PushSubscription.id);
 
 });
 </script>

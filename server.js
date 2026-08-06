@@ -20,8 +20,8 @@ app.post("/send", async (req, res) => {
   app_id: process.env.ONESIGNAL_APP_ID,
 
   include_subscription_ids: [
-    "1017fe4d-bc3d-479b-94c3-cdad394d5b00"
-  ],
+  "5aa9ca18-6dd4-4768-8aa8-291c6cfe4271"
+],
 
   headings: {
     en: req.body.title

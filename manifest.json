@@ -1,7 +1,9 @@
 {
   "name": "Rambantu Vayu Putrudu",
   "short_name": "RVP News",
-  "start_url": "index.html",
+  "start_url": "/",
+  "scope": "/",
+  "id": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#b30000",
