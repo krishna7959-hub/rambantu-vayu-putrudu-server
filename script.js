@@ -46,10 +46,12 @@ let editMode = false;
 let editId = "";
 
 publishBtn.addEventListener("click", async () => {
-console.log("Publish button clicked");
+
+  console.log("Publish button clicked");
 
   const title = document.getElementById("title").value.trim();
   const details = document.getElementById("details").value.trim();
+  const category = document.getElementById("category").value;
   const imageFile = document.getElementById("image").files[0];
 
   if (!title || !details || (!imageFile && !editMode)) {
@@ -77,6 +79,7 @@ console.log("Publish button clicked");
 
       const uploadData = await upload.json();
       imageURL = uploadData.secure_url;
+
     }
 
     if (editMode) {
@@ -87,6 +90,7 @@ console.log("Publish button clicked");
       await updateDoc(doc(db, "news", editId), {
         title,
         details,
+        category,
         image: imageURL || oldData.image
       });
 
@@ -101,34 +105,39 @@ console.log("Publish button clicked");
       await addDoc(collection(db, "news"), {
         title,
         details,
+        category,
         image: imageURL,
         createdAt: new Date()
       });
-console.log("News saved to Firestore");
 
-console.log("Sending notification...");
+      console.log("News saved to Firestore");
 
-try {
-  const response = await fetch("https://rambantu-vayu-putrudu-server.onrender.com/send", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      title: title,
-      message: details.substring(0, 100),
-      url: "https://rambantu-vayu-putrudu.web.app"
-    })
-  });
+      try {
 
-  console.log("Status:", response.status);
-  console.log("Response:", await response.text());
+        const response = await fetch("https://rambantu-vayu-putrudu-server.onrender.com/send", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            title: title,
+            message: details.substring(0, 100),
+            url: "https://rambantu-vayu-putrudu.web.app"
+          })
+        });
 
-} catch (e) {
-  console.error("Fetch Error:", e);
-}
+        console.log("Status:", response.status);
+        console.log("Response:", await response.text());
 
-alert("వార్త విజయవంతంగా Publish అయింది!");
+      } catch (e) {
+
+        console.error("Fetch Error:", e);
+
+      }
+
+      alert("వార్త విజయవంతంగా Publish అయింది!");
+
+    }
 
     document.getElementById("title").value = "";
     document.getElementById("details").value = "";
@@ -137,8 +146,10 @@ alert("వార్త విజయవంతంగా Publish అయింది
     await loadNews();
 
   } catch (err) {
+
     console.error(err);
     alert("Publish కాలేదు.");
+
   }
 
 });
