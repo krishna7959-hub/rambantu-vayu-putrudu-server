@@ -1,3 +1,12 @@
+const admin = require("firebase-admin");
+const serviceAccount = require("./firebase-service-account.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+const db = admin.firestore();
+
 const express = require("express");
 const cors = require("cors");
 
@@ -10,31 +19,47 @@ app.post("/send", async (req, res) => {
   try {
     console.log("Received:", req.body);
 
-    const response = await fetch("https://api.onesignal.com/notifications?c=push", {
-      method: "POST",
-      headers: {
-        "Authorization": `Key ${process.env.ONESIGNAL_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-  app_id: process.env.ONESIGNAL_APP_ID,
+    // Firestore నుంచి అన్ని Subscription IDs తీసుకోండి
+    const snapshot = await db.collection("subscriptions").get();
 
-  include_subscription_ids: [
-  "5aa9ca18-6dd4-4768-8aa8-291c6cfe4271"
-],
+    const ids = [];
+    snapshot.forEach((doc) => {
+      ids.push(doc.id);
+    });
 
-  headings: {
-    en: req.body.title
-  },
-  contents: {
-    en: req.body.message
-  },
-  target_channel: "push",
-  url: req.body.url
-})
-});
+    console.log("Subscription IDs:", ids);
 
-const data = await response.json();
+    if (ids.length === 0) {
+      return res.json({
+        success: false,
+        message: "No subscriptions found."
+      });
+    }
+
+    const response = await fetch(
+      "https://api.onesignal.com/notifications?c=push",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Key ${process.env.ONESIGNAL_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          app_id: process.env.ONESIGNAL_APP_ID,
+          include_subscription_ids: ids,
+          headings: {
+            en: req.body.title
+          },
+          contents: {
+            en: req.body.message
+          },
+          target_channel: "push",
+          url: req.body.url
+        })
+      }
+    );
+
+    const data = await response.json();
 
     console.log("OneSignal Response:", data);
 
@@ -42,7 +67,9 @@ const data = await response.json();
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: err.message
+    });
   }
 });
 
