@@ -20,7 +20,7 @@ app.post("/send", async (req, res) => {
     console.log("Received:", req.body);
 
     // Firestore నుంచి అన్ని Subscription IDs తీసుకోండి
-    const snapshot = await db.collection("subscriptions").get();
+    const snapshot = await db.collection("fcmTokens").get();
 
     const ids = [];
     snapshot.forEach((doc) => {
