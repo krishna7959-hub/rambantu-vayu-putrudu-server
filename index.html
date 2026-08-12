@@ -1,31 +1,26 @@
 <!DOCTYPE html>
 <html lang="te">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
+
 <title>Rambantu Vayu Putrudu</title>
 
 <link rel="stylesheet" href="style.css">
 <link rel="manifest" href="manifest.json">
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-OneSignalDeferred.push(async function(OneSignal) {
 
-  await OneSignal.init({
-    appId: "ca312fa3-511f-4b36-ab0e-8d774ab70cfc",
-    autoResubscribe: true,
-    serviceWorkerPath: "OneSignalSDKWorker.js",
-    notifyButton: {
-      enable: true
-    }
-  });
+<!-- =========================================
+     OneSignal Web SDK
+========================================= -->
 
-  await OneSignal.Notifications.requestPermission();
-
-  alert("Subscription ID: " + OneSignal.User.PushSubscription.id);
-
-});
+<script
+  src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+  defer>
 </script>
 
 </head>
@@ -39,75 +34,319 @@ OneSignalDeferred.push(async function(OneSignal) {
   </div>
 
   <div class="search-box">
+
     <input
       type="text"
       id="searchInput"
       placeholder="Search News..."
       onkeyup="searchNews()">
+
   </div>
 
 </header>
 
+
 <div id="featuredNews"></div>
 
+
 <nav>
-    <a href="#">🏠 Home</a>
-    <a href="#">🏛 Politics</a>
-    <a href="#">🛕 Devotional</a>
-    <a href="#">🏏 Cricket</a>
-    <a href="#">🎬 Cinema</a>
-    <a href="#">🎥 Videos</a>
-    <a href="#">📞 Contact</a>
+
+  <a href="#">🏠 Home</a>
+
+  <a href="#">🏛 Politics</a>
+
+  <a href="#">🛕 Devotional</a>
+
+  <a href="#">🏏 Cricket</a>
+
+  <a href="#">🎬 Cinema</a>
+
+  <a href="#">🎥 Videos</a>
+
+  <a href="#">📞 Contact</a>
+
 </nav>
 
+
 <div class="breaking-news">
-  
-  <span class="breaking-label">BREAKING</span>
-  
-  <marquee id="breakingText" behavior="scroll" direction="left">
+
+  <span class="breaking-label">
+    BREAKING
+  </span>
+
+  <marquee
+    id="breakingText"
+    behavior="scroll"
+    direction="left">
+
     Loading Breaking News...
+
   </marquee>
-  
+
 </div>
+
 
 <section class="hero">
 
-<h2>స్వాగతం</h2>
+  <h2>స్వాగతం</h2>
 
-<p>
-Rambantu Vayu Putrudu తెలుగు న్యూస్ పోర్టల్‌కు
-మీ అందరికీ హృదయపూర్వక స్వాగతం.
-</p>
+  <p>
+    Rambantu Vayu Putrudu తెలుగు న్యూస్ పోర్టల్‌కు
+    మీ అందరికీ హృదయపూర్వక స్వాగతం.
+  </p>
 
 </section>
+
 
 <section class="latest">
 
-  
   <h2>Latest News</h2>
+
   <div class="category-menu">
-    
-    <button onclick="filterNews('All')">All</button>
-    
-    <button onclick="filterNews('Politics')">Politics</button>
-    
-    <button onclick="filterNews('Devotional')">Devotional</button>
-    
-    <button onclick="filterNews('Sports')">Sports</button>
-    
-    <button onclick="filterNews('Cinema')">Cinema</button>
-    
-    <button onclick="filterNews('Business')">Business</button>
-    
-    <button onclick="filterNews('Technology')">Technology</button>
-    
-</div>
+
+    <button onclick="filterNews('All')">
+      All
+    </button>
+
+    <button onclick="filterNews('Politics')">
+      Politics
+    </button>
+
+    <button onclick="filterNews('Devotional')">
+      Devotional
+    </button>
+
+    <button onclick="filterNews('Sports')">
+      Sports
+    </button>
+
+    <button onclick="filterNews('Cinema')">
+      Cinema
+    </button>
+
+    <button onclick="filterNews('Business')">
+      Business
+    </button>
+
+    <button onclick="filterNews('Technology')">
+      Technology
+    </button>
+
+  </div>
+
   <div id="newsContainer"></div>
 
-  
 </section>
-<script type="module" src="firebase.js"></script>
-<script type="module" src="index.js"></script>
-<button id="topBtn" onclick="topFunction()">⬆</button>
+
+
+<!-- =========================================
+     Firebase
+========================================= -->
+
+<script
+  type="module"
+  src="firebase.js">
+</script>
+
+
+<!-- =========================================
+     Main Website JavaScript
+========================================= -->
+
+<script
+  type="module"
+  src="index.js">
+</script>
+
+
+<!-- =========================================
+     OneSignal + Firestore Subscription
+========================================= -->
+
+<script type="module">
+
+import { db } from "./firebase.js";
+
+import {
+  doc,
+  setDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+window.OneSignalDeferred =
+  window.OneSignalDeferred || [];
+
+
+OneSignalDeferred.push(async function(OneSignal) {
+
+  try {
+
+    await OneSignal.init({
+
+      appId:
+        "ca312fa3-511f-4b36-ab0e-8d774ab70cfc",
+
+      autoResubscribe: true,
+
+      serviceWorkerPath:
+        "OneSignalSDKWorker.js",
+
+      notifyButton: {
+        enable: true
+      }
+
+    });
+
+
+    console.log(
+      "OneSignal initialized successfully."
+    );
+
+
+    // =========================================
+    // Save OneSignal Subscription ID
+    // =========================================
+
+    async function saveSubscription() {
+
+      try {
+
+        const subscription =
+          OneSignal.User.PushSubscription;
+
+        const subscriptionId =
+          subscription.id;
+
+
+        console.log(
+          "OneSignal Subscription ID:",
+          subscriptionId
+        );
+
+
+        // Not subscribed yet
+        if (!subscriptionId) {
+
+          console.log(
+            "No OneSignal Subscription ID yet."
+          );
+
+          return;
+
+        }
+
+
+        // =====================================
+        // Firestore
+        // subscriptions/{OneSignalSubscriptionID}
+        // =====================================
+
+        await setDoc(
+
+          doc(
+            db,
+            "subscriptions",
+            subscriptionId
+          ),
+
+          {
+
+            subscriptionId:
+              subscriptionId,
+
+            updatedAt:
+              serverTimestamp(),
+
+            platform:
+              "web"
+
+          },
+
+          {
+            merge: true
+          }
+
+        );
+
+
+        console.log(
+          "OneSignal Subscription saved to Firestore:",
+          subscriptionId
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Subscription Save Error:",
+          error
+        );
+
+      }
+
+    }
+
+
+    // =========================================
+    // Check Existing Subscription
+    // =========================================
+
+    await saveSubscription();
+
+
+    // =========================================
+    // Listen for Subscription Changes
+    // =========================================
+
+    OneSignal.User.PushSubscription
+      .addEventListener(
+        "change",
+        async function(event) {
+
+          console.log(
+            "OneSignal Subscription changed:",
+            event
+          );
+
+          await saveSubscription();
+
+        }
+      );
+
+
+    console.log(
+      "OneSignal Permission:",
+      OneSignal.Notifications.permission
+    );
+
+
+    console.log(
+      "OneSignal Subscribed:",
+      await OneSignal.User.PushSubscription.optedIn
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "OneSignal Initialization Error:",
+      error
+    );
+
+  }
+
+});
+
+</script>
+
+
+<button
+  id="topBtn"
+  onclick="topFunction()">
+
+  ⬆
+
+</button>
+
 </body>
 </html>
