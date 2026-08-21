@@ -110,32 +110,30 @@ publishBtn.addEventListener("click", async () => {
         createdAt: new Date()
       });
 
-      console.log("News saved to Firestore");
+     console.log("News saved to Firestore");
 
-      try {
+alert("వార్త విజయవంతంగా Publish అయింది!");
 
-        const response = await fetch("https://rambantu-vayu-putrudu-server.onrender.com/send", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            title: title,
-            message: details.substring(0, 100),
-            url: "https://rambantu-vayu-putrudu.web.app"
-          })
-        });
+fetch("https://rambantu-vayu-putrudu-server.onrender.com/send", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    title: title,
+    message: details.substring(0, 100),
+    url: "https://rambantu-vayu-putrudu.web.app"
+  })
+})
+.then(async response => {
+  console.log("Notification Status:", response.status);
+  console.log("Notification Response:", await response.text());
+})
+.catch(error => {
+  console.error("Notification Error:", error);
+});
 
-        console.log("Status:", response.status);
-        console.log("Response:", await response.text());
-
-      } catch (e) {
-
-        console.error("Fetch Error:", e);
-
-      }
-
-      alert("వార్త విజయవంతంగా Publish అయింది!");
+      
 
     }
 
