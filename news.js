@@ -1,4 +1,5 @@
 import { db } from "./firebase.js";
+
 import {
   doc,
   getDoc,
@@ -6,85 +7,321 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
 
-const newsDetails = document.getElementById("newsDetails");
+const params =
+  new URLSearchParams(
+    window.location.search
+  );
+
+const id =
+  params.get("id");
+
+
+const newsDetails =
+  document.getElementById(
+    "newsDetails"
+  );
+
+
+// =========================================
+// Load News
+// =========================================
 
 async function loadNews() {
-  const docRef = doc(db, "news", id);
-  const docSnap = await getDoc(docRef);
-  
+
+  if (!id) {
+
+    newsDetails.innerHTML =
+      "<h2>News Not Found</h2>";
+
+    return;
+
+  }
+
+
+  const docRef =
+    doc(
+      db,
+      "news",
+      id
+    );
+
+
+  const docSnap =
+    await getDoc(docRef);
+
+
   if (docSnap.exists()) {
-    const news = docSnap.data();
-    
+
+    const news =
+      docSnap.data();
+
+
     newsDetails.innerHTML = `
+
       <div class="card">
-        <img src="${news.image}" class="news-image">
-    <h1>${news.title}</h1>
 
-<p class="news-date">
-📅 ${
-  news.createdAt
-    ? new Date(news.createdAt.seconds * 1000).toLocaleString("en-IN")
-    : ""
-}
-</p>
+        <img
+          src="${news.image || ""}"
+          class="news-image"
+        >
 
-<p>${news.details}</p>
+        <h1>
+          ${news.title || ""}
+        </h1>
+
+
+        <p class="news-date">
+
+          📅 ${
+            news.createdAt
+              ? new Date(
+                  news.createdAt.seconds * 1000
+                ).toLocaleString("en-IN")
+              : ""
+          }
+
+        </p>
+
+
+        <p>
+          ${news.details || ""}
+        </p>
+
+
         <br>
-        <button onclick="history.back()">⬅ Back</button>
-        
+
+
+        <button
+          onclick="history.back()">
+
+          ⬅ Back
+
+        </button>
+
+
         <br><br>
 
-<a href="https://wa.me/?text=${encodeURIComponent(news.title + "\n\n" + window.location.href)}"
-   target="_blank">
 
-<button class="share-btn">
-🟢 Share on WhatsApp
-</button>
+        <button
+          class="share-btn"
+          onclick="shareCurrentNews()">
 
-</a>
-<hr>
-<h2>📰 Related News</h2>
-<div id="relatedNews"></div>
+          📤 Share News
+
+        </button>
+
+
+        <hr>
+
+
+        <h2>
+          📰 Related News
+        </h2>
+
+
+        <div id="relatedNews"></div>
+
       </div>
+
     `;
-  loadRelatedNews(id);
-  } else {
-    newsDetails.innerHTML = "<h2>News Not Found</h2>";
+
+
+    // Store current news globally
+    window.currentNews = news;
+
+
+    loadRelatedNews(id);
+
   }
+
+  else {
+
+    newsDetails.innerHTML =
+      "<h2>News Not Found</h2>";
+
+  }
+
 }
-async function loadRelatedNews(currentId) {
-  
-  const snap = await getDocs(collection(db, "news"));
-  
-  let html = "";
-  
-  snap.forEach(doc => {
-    
-    if (doc.id !== currentId && html.split("news-card").length <= 5) {
-      
-      const n = doc.data();
-      
-      html += `
-      <div class="news-card"
-      onclick="location.href='news.html?id=${doc.id}'">
 
-      <img src="${n.image}">
 
-      <div class="news-content">
-      <h3>${n.title}</h3>
-      </div>
+// =========================================
+// Share Current News
+// =========================================
 
-      </div>
-      `;
-      
+window.shareCurrentNews =
+  async function() {
+
+    if (!window.currentNews) {
+      return;
     }
-    
-  });
-  
-  document.getElementById("relatedNews").innerHTML = html;
-  
+
+
+    const news =
+      window.currentNews;
+
+
+    const shareUrl =
+      window.location.href;
+
+
+    const shareData = {
+
+      title:
+        news.title ||
+        "Rambantu Vayu Putrudu",
+
+      text:
+        (news.title || "") +
+        "\n\nRambantu Vayu Putrudu",
+
+      url:
+        shareUrl
+
+    };
+
+
+    // =====================================
+    // Native Mobile Share
+    // =====================================
+
+    if (
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare(shareData)
+    ) {
+
+      try {
+
+        await navigator.share(
+          shareData
+        );
+
+      }
+
+      catch (error) {
+
+        console.log(
+          "Share cancelled:",
+          error
+        );
+
+      }
+
+      return;
+
+    }
+
+
+    // =====================================
+    // Fallback WhatsApp
+    // =====================================
+
+    const whatsappUrl =
+      "https://wa.me/?text=" +
+      encodeURIComponent(
+        news.title +
+        "\n\n" +
+        shareUrl
+      );
+
+
+    window.open(
+      whatsappUrl,
+      "_blank"
+    );
+
+  };
+
+
+// =========================================
+// Related News
+// =========================================
+
+async function loadRelatedNews(
+  currentId
+) {
+
+  const snap =
+    await getDocs(
+      collection(
+        db,
+        "news"
+      )
+    );
+
+
+  let html = "";
+
+  let count = 0;
+
+
+  snap.forEach(
+    (newsDoc) => {
+
+      if (
+        newsDoc.id !== currentId &&
+        count < 5
+      ) {
+
+        const n =
+          newsDoc.data();
+
+
+        html += `
+
+          <div
+            class="news-card"
+            onclick="
+              location.href='news.html?id=${newsDoc.id}'
+            "
+          >
+
+            <img
+              src="${n.image || ""}"
+            >
+
+            <div
+              class="news-content"
+            >
+
+              <h3>
+                ${n.title || ""}
+              </h3>
+
+            </div>
+
+          </div>
+
+        `;
+
+
+        count++;
+
+      }
+
+    }
+  );
+
+
+  const related =
+    document.getElementById(
+      "relatedNews"
+    );
+
+
+  if (related) {
+
+    related.innerHTML =
+      html;
+
+  }
+
 }
+
+
+// =========================================
+// Start
+// =========================================
+
 loadNews();
