@@ -157,89 +157,244 @@ async function loadNews() {
 // Share Current News
 // =========================================
 
-window.shareCurrentNews =
-  async function() {
+window.shareCurrentNews = async function () {
 
-    if (!window.currentNews) {
-      return;
-    }
+  if (!window.currentNews) {
+    return;
+  }
 
+  const news = window.currentNews;
 
-    const news =
-      window.currentNews;
+  const shareUrl = window.location.href;
 
+  const title =
+    news.title ||
+    "Rambantu Vayu Putrudu";
 
-    const shareUrl =
-      window.location.href;
-
-
-    const shareData = {
-
-      title:
-        news.title ||
-        "Rambantu Vayu Putrudu",
-
-      text:
-        (news.title || "") +
-        "\n\nRambantu Vayu Putrudu",
-
-      url:
-        shareUrl
-
-    };
+  const text =
+    title +
+    "\n\nRambantu Vayu Putrudu\n" +
+    shareUrl;
 
 
-    // =====================================
-    // Native Mobile Share
-    // =====================================
+  // =====================================
+  // Create Share Image
+  // =====================================
 
-    if (
-      navigator.share &&
-      navigator.canShare &&
-      navigator.canShare(shareData)
-    ) {
+  try {
 
-      try {
+    const imageUrl = news.image;
 
-        await navigator.share(
-          shareData
+    if (imageUrl) {
+
+      const img = new Image();
+
+      img.crossOrigin = "anonymous";
+
+      img.src = imageUrl;
+
+      img.onload = async function () {
+
+        const canvas =
+          document.createElement("canvas");
+
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+
+        const ctx =
+          canvas.getContext("2d");
+
+        ctx.drawImage(
+          img,
+          0,
+          0,
+          canvas.width,
+          canvas.height
         );
 
-      }
 
-      catch (error) {
+        // =================================
+        // Rambantu Vayu Putrudu Watermark
+        // =================================
 
-        console.log(
-          "Share cancelled:",
-          error
+        const fontSize =
+          Math.max(
+            24,
+            Math.floor(canvas.width * 0.035)
+          );
+
+        ctx.font =
+          "bold " +
+          fontSize +
+          "px Arial";
+
+        const padding = 20;
+
+        const watermark =
+          "Rambantu Vayu Putrudu";
+
+        const textWidth =
+          ctx.measureText(watermark).width;
+
+
+        ctx.fillStyle =
+          "rgba(0,0,0,0.65)";
+
+        ctx.fillRect(
+          20,
+          canvas.height -
+            fontSize -
+            35,
+          textWidth + 30,
+          fontSize + 20
         );
 
-      }
+
+        ctx.fillStyle =
+          "#ffffff";
+
+        ctx.fillText(
+          watermark,
+          35,
+          canvas.height - 25
+        );
+
+
+        // =================================
+        // Convert Image
+        // =================================
+
+        canvas.toBlob(
+          async function (blob) {
+
+            if (!blob) {
+              fallbackShare();
+              return;
+            }
+
+
+            const file =
+              new File(
+                [blob],
+                "rambantu-vayu-putrudu-news.jpg",
+                {
+                  type: "image/jpeg"
+                }
+              );
+
+
+            // =============================
+            // Mobile Share
+            // =============================
+
+            if (
+              navigator.share &&
+              navigator.canShare &&
+              navigator.canShare({
+                files: [file]
+              })
+            ) {
+
+              try {
+
+                await navigator.share({
+
+                  title: title,
+
+                  text: text,
+
+                  files: [file]
+
+                });
+
+                return;
+
+              }
+
+              catch (error) {
+
+                console.log(
+                  "Share cancelled:",
+                  error
+                );
+
+              }
+
+            }
+
+
+            fallbackShare();
+
+          },
+          "image/jpeg",
+          0.92
+        );
+
+        return;
+
+      };
+
+
+      img.onerror = function () {
+
+        fallbackShare();
+
+      };
 
       return;
 
     }
 
+  }
 
-    // =====================================
-    // Fallback WhatsApp
-    // =====================================
+  catch (error) {
+
+    console.log(
+      "Image share error:",
+      error
+    );
+
+  }
+
+
+  fallbackShare();
+
+
+  // =====================================
+  // Fallback Share
+  // =====================================
+
+  function fallbackShare() {
+
+    if (navigator.share) {
+
+      navigator.share({
+
+        title: title,
+
+        text: text,
+
+        url: shareUrl
+
+      });
+
+      return;
+
+    }
+
 
     const whatsappUrl =
       "https://wa.me/?text=" +
-      encodeURIComponent(
-        news.title +
-        "\n\n" +
-        shareUrl
-      );
-
+      encodeURIComponent(text);
 
     window.open(
       whatsappUrl,
       "_blank"
     );
 
-  };
+  }
+
+};
 
 
 // =========================================
