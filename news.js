@@ -61,10 +61,18 @@ async function loadNews() {
 
       <div class="card">
 
-        <img
-          src="${news.image || ""}"
-          class="news-image"
-        >
+        <div class="news-image-container">
+
+  <img
+    src="${news.image || ""}"
+    class="news-image"
+  >
+
+  <div class="news-watermark">
+    Rambantu Vayu Putrudu
+  </div>
+
+</div>
 
         <h1>
           ${news.title || ""}

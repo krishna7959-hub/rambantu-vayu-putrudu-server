@@ -527,3 +527,46 @@ nav a:hover {
 #topBtn:hover {
     background: #900;
 }
+/* ===== News Image Branding ===== */
+
+.news-image-container {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.news-image-container .news-image {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    display: block;
+}
+
+.news-watermark {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    background: rgba(0, 0, 0, 0.72);
+    color: #fff;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: bold;
+    z-index: 5;
+    letter-spacing: 0.3px;
+}
+
+@media (max-width: 768px) {
+
+    .news-image-container .news-image {
+        height: 230px;
+    }
+
+    .news-watermark {
+        font-size: 12px;
+        padding: 6px 10px;
+        bottom: 8px;
+        left: 8px;
+    }
+
+}
