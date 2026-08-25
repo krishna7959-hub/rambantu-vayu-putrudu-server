@@ -1,6 +1,18 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+import {
+  getFirestore
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+  getStorage
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+import {
+  getAuth,
+  GoogleAuthProvider
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyDExlU66IL0hE1H-DDkmok_IpkBm-haTqg",
@@ -11,7 +23,24 @@ const firebaseConfig = {
   appId: "1:285095305794:web:dddf323e583c21ced303db"
 };
 
-const app = initializeApp(firebaseConfig);
 
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+const app =
+  initializeApp(firebaseConfig);
+
+
+export const db =
+  getFirestore(app);
+
+
+export const storage =
+  getStorage(app);
+
+
+// 🔐 Authentication
+export const auth =
+  getAuth(app);
+
+
+// 🔵 Google Login Provider
+export const googleProvider =
+  new GoogleAuthProvider();

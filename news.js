@@ -1,12 +1,54 @@
-import { db } from "./firebase.js";
+import {
+  db,
+  auth,
+  googleProvider
+} from "./firebase.js";
 
+import {
+  signInWithPopup,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   doc,
   getDoc,
   collection,
-  getDocs
+  getDocs,
+  addDoc,
+  query,
+  where,
+  orderBy,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+// =========================================
+// Google Login
+// =========================================
 
+window.loginWithGoogle = async function () {
+
+  try {
+
+    await signInWithPopup(
+      auth,
+      googleProvider
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Google Login Error:",
+      error
+    );
+
+    alert(
+      "Google Login కాలేదు. మళ్ళీ ప్రయత్నించండి."
+    );
+
+  }
+
+};
 
 const params =
   new URLSearchParams(
@@ -63,16 +105,17 @@ async function loadNews() {
 
         <div class="news-image-container">
 
-  <img
-    src="${news.image || ""}"
-    class="news-image"
-  >
+          <img
+            src="${news.image || ""}"
+            class="news-image"
+          >
 
-  <div class="news-watermark">
-    Rambantu Vayu Putrudu
-  </div>
+          <div class="news-watermark">
+            Rambantu Vayu Putrudu
+          </div>
 
-</div>
+        </div>
+
 
         <h1>
           ${news.title || ""}
@@ -120,6 +163,69 @@ async function loadNews() {
         </button>
 
 
+        <!-- =================================
+             COMMENTS
+        ================================== -->
+
+        <hr>
+
+
+        <h2>
+          💬 Comments
+        </h2>
+
+
+        <div class="comment-box">
+
+  <div id="loginBox">
+
+    <button
+      id="googleLoginBtn"
+      onclick="loginWithGoogle()">
+
+      🔵 Sign in with Google
+
+    </button>
+
+  </div>
+
+
+  <div id="commentForm" style="display:none;">
+
+    <p id="loggedInUser"></p>
+
+    <textarea
+      id="commentText"
+      placeholder="Write your comment..."
+      rows="4"
+      maxlength="500"
+    ></textarea>
+
+    <button
+      id="postCommentBtn"
+      onclick="postComment()">
+
+      💬 Post Comment
+
+    </button>
+
+  </div>
+
+</div>
+
+        <div id="commentsList">
+
+          <p>
+            Loading comments...
+          </p>
+
+        </div>
+
+
+        <!-- =================================
+             RELATED NEWS
+        ================================== -->
+
         <hr>
 
 
@@ -139,6 +245,11 @@ async function loadNews() {
     window.currentNews = news;
 
 
+    // Load comments
+    loadComments(id);
+
+
+    // Load related news
     loadRelatedNews(id);
 
   }
@@ -163,13 +274,19 @@ window.shareCurrentNews = async function () {
     return;
   }
 
-  const news = window.currentNews;
 
-  const shareUrl = window.location.href;
+  const news =
+    window.currentNews;
+
+
+  const shareUrl =
+    window.location.href;
+
 
   const title =
     news.title ||
     "Rambantu Vayu Putrudu";
+
 
   const text =
     title +
@@ -183,163 +300,194 @@ window.shareCurrentNews = async function () {
 
   try {
 
-    const imageUrl = news.image;
+    const imageUrl =
+      news.image;
+
 
     if (imageUrl) {
 
-      const img = new Image();
-
-      img.crossOrigin = "anonymous";
-
-      img.src = imageUrl;
-
-      img.onload = async function () {
-
-        const canvas =
-          document.createElement("canvas");
-
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-
-        const ctx =
-          canvas.getContext("2d");
-
-        ctx.drawImage(
-          img,
-          0,
-          0,
-          canvas.width,
-          canvas.height
-        );
+      const img =
+        new Image();
 
 
-        // =================================
-        // Rambantu Vayu Putrudu Watermark
-        // =================================
+      img.crossOrigin =
+        "anonymous";
 
-        const fontSize =
-          Math.max(
-            24,
-            Math.floor(canvas.width * 0.035)
+
+      img.src =
+        imageUrl;
+
+
+      img.onload =
+        async function () {
+
+          const canvas =
+            document.createElement(
+              "canvas"
+            );
+
+
+          canvas.width =
+            img.naturalWidth;
+
+
+          canvas.height =
+            img.naturalHeight;
+
+
+          const ctx =
+            canvas.getContext(
+              "2d"
+            );
+
+
+          ctx.drawImage(
+            img,
+            0,
+            0,
+            canvas.width,
+            canvas.height
           );
 
-        ctx.font =
-          "bold " +
-          fontSize +
-          "px Arial";
 
-        const padding = 20;
+          // =================================
+          // Rambantu Vayu Putrudu Watermark
+          // =================================
 
-        const watermark =
-          "Rambantu Vayu Putrudu";
+          const fontSize =
+            Math.max(
+              24,
+              Math.floor(
+                canvas.width * 0.035
+              )
+            );
 
-        const textWidth =
-          ctx.measureText(watermark).width;
+
+          ctx.font =
+            "bold " +
+            fontSize +
+            "px Arial";
 
 
-        ctx.fillStyle =
-          "rgba(0,0,0,0.65)";
+          const watermark =
+            "Rambantu Vayu Putrudu";
 
-        ctx.fillRect(
-          20,
-          canvas.height -
-            fontSize -
+
+          const textWidth =
+            ctx.measureText(
+              watermark
+            ).width;
+
+
+          ctx.fillStyle =
+            "rgba(0,0,0,0.65)";
+
+
+          ctx.fillRect(
+            20,
+            canvas.height -
+              fontSize -
+              35,
+            textWidth + 30,
+            fontSize + 20
+          );
+
+
+          ctx.fillStyle =
+            "#ffffff";
+
+
+          ctx.fillText(
+            watermark,
             35,
-          textWidth + 30,
-          fontSize + 20
-        );
+            canvas.height - 25
+          );
 
 
-        ctx.fillStyle =
-          "#ffffff";
+          // =================================
+          // Convert Image
+          // =================================
 
-        ctx.fillText(
-          watermark,
-          35,
-          canvas.height - 25
-        );
+          canvas.toBlob(
+            async function (blob) {
 
+              if (!blob) {
 
-        // =================================
-        // Convert Image
-        // =================================
-
-        canvas.toBlob(
-          async function (blob) {
-
-            if (!blob) {
-              fallbackShare();
-              return;
-            }
-
-
-            const file =
-              new File(
-                [blob],
-                "rambantu-vayu-putrudu-news.jpg",
-                {
-                  type: "image/jpeg"
-                }
-              );
-
-
-            // =============================
-            // Mobile Share
-            // =============================
-
-            if (
-              navigator.share &&
-              navigator.canShare &&
-              navigator.canShare({
-                files: [file]
-              })
-            ) {
-
-              try {
-
-                await navigator.share({
-
-                  title: title,
-
-                  text: text,
-
-                  files: [file]
-
-                });
+                fallbackShare();
 
                 return;
 
               }
 
-              catch (error) {
 
-                console.log(
-                  "Share cancelled:",
-                  error
+              const file =
+                new File(
+                  [blob],
+                  "rambantu-vayu-putrudu-news.jpg",
+                  {
+                    type: "image/jpeg"
+                  }
                 );
+
+
+              // =============================
+              // Mobile Share
+              // =============================
+
+              if (
+                navigator.share &&
+                navigator.canShare &&
+                navigator.canShare({
+                  files: [file]
+                })
+              ) {
+
+                try {
+
+                  await navigator.share({
+
+                    title: title,
+
+                    text: text,
+
+                    files: [file]
+
+                  });
+
+
+                  return;
+
+                }
+
+                catch (error) {
+
+                  console.log(
+                    "Share cancelled:",
+                    error
+                  );
+
+                }
 
               }
 
-            }
+
+              fallbackShare();
+
+            },
+            "image/jpeg",
+            0.92
+          );
+
+        };
 
 
-            fallbackShare();
+      img.onerror =
+        function () {
 
-          },
-          "image/jpeg",
-          0.92
-        );
+          fallbackShare();
 
-        return;
+        };
 
-      };
-
-
-      img.onerror = function () {
-
-        fallbackShare();
-
-      };
 
       return;
 
@@ -387,6 +535,7 @@ window.shareCurrentNews = async function () {
       "https://wa.me/?text=" +
       encodeURIComponent(text);
 
+
     window.open(
       whatsappUrl,
       "_blank"
@@ -395,6 +544,330 @@ window.shareCurrentNews = async function () {
   }
 
 };
+
+
+// =========================================
+// POST COMMENT
+// =========================================
+
+window.postComment = async function () {
+
+  const nameInput =
+    document.getElementById(
+      "commentName"
+    );
+
+
+  const textInput =
+    document.getElementById(
+      "commentText"
+    );
+
+
+  const button =
+    document.getElementById(
+      "postCommentBtn"
+    );
+
+
+  if (!nameInput || !textInput) {
+    return;
+  }
+
+
+  const name =
+    nameInput.value.trim();
+
+
+  const text =
+    textInput.value.trim();
+
+
+  if (!name) {
+
+    alert(
+      "దయచేసి మీ పేరు నమోదు చేయండి."
+    );
+
+    nameInput.focus();
+
+    return;
+
+  }
+
+
+  if (!text) {
+
+    alert(
+      "దయచేసి Comment నమోదు చేయండి."
+    );
+
+    textInput.focus();
+
+    return;
+
+  }
+
+
+  if (!id) {
+
+    alert(
+      "News ID కనుగొనబడలేదు."
+    );
+
+    return;
+
+  }
+
+
+  try {
+
+    button.disabled =
+      true;
+
+
+    button.innerText =
+      "Posting...";
+
+
+    await addDoc(
+      collection(
+        db,
+        "comments"
+      ),
+      {
+
+        newsId: id,
+
+        name: name,
+
+        text: text,
+
+        createdAt:
+          serverTimestamp()
+
+      }
+    );
+
+
+    nameInput.value =
+      "";
+
+
+    textInput.value =
+      "";
+
+
+    alert(
+      "Comment విజయవంతంగా Post అయింది."
+    );
+
+
+    await loadComments(id);
+
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Comment Error:",
+      error
+    );
+
+
+    alert(
+      "Comment Post కాలేదు. మళ్ళీ ప్రయత్నించండి."
+    );
+
+  }
+
+
+  finally {
+
+    button.disabled =
+      false;
+
+
+    button.innerText =
+      "💬 Post Comment";
+
+  }
+
+};
+
+
+// =========================================
+// LOAD COMMENTS
+// =========================================
+
+async function loadComments(
+  newsId
+) {
+
+  const commentsList =
+    document.getElementById(
+      "commentsList"
+    );
+
+
+  if (!commentsList) {
+    return;
+  }
+
+
+  commentsList.innerHTML =
+    "<p>Loading comments...</p>";
+
+
+  try {
+
+    const commentsQuery =
+      query(
+        collection(
+          db,
+          "comments"
+        ),
+
+        where(
+          "newsId",
+          "==",
+          newsId
+        ),
+
+        orderBy(
+          "createdAt",
+          "desc"
+        )
+      );
+
+
+    const snapshot =
+      await getDocs(
+        commentsQuery
+      );
+
+
+    if (snapshot.empty) {
+
+      commentsList.innerHTML = `
+        <p class="no-comments">
+          ఇంకా Comments లేవు. మొదటి Comment మీరే చేయండి. 🙂
+        </p>
+      `;
+
+      return;
+
+    }
+
+
+    let html = "";
+
+
+    snapshot.forEach(
+      (commentDoc) => {
+
+        const comment =
+          commentDoc.data();
+
+
+        let dateText =
+          "";
+
+
+        if (comment.createdAt) {
+
+          const date =
+            comment.createdAt.toDate();
+
+
+          dateText =
+            date.toLocaleString(
+              "en-IN"
+            );
+
+        }
+
+
+        html += `
+
+          <div class="comment-card">
+
+            <div class="comment-header">
+
+              <strong>
+                👤 ${escapeHTML(
+                  comment.name || "User"
+                )}
+              </strong>
+
+              <span class="comment-date">
+                ${dateText}
+              </span>
+
+            </div>
+
+
+            <p class="comment-text">
+              ${escapeHTML(
+                comment.text || ""
+              )}
+            </p>
+
+          </div>
+
+        `;
+
+      }
+    );
+
+
+    commentsList.innerHTML =
+      html;
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Load Comments Error:",
+      error
+    );
+
+
+    commentsList.innerHTML = `
+      <p class="comments-error">
+        Comments Load కాలేదు.
+      </p>
+    `;
+
+  }
+
+}
+
+
+// =========================================
+// SECURITY
+// Escape User Comments
+// =========================================
+
+function escapeHTML(
+  text
+) {
+
+  const div =
+    document.createElement(
+      "div"
+    );
+
+
+  div.textContent =
+    text;
+
+
+  return div.innerHTML;
+
+}
 
 
 // =========================================
@@ -443,6 +916,7 @@ async function loadRelatedNews(
             <img
               src="${n.image || ""}"
             >
+
 
             <div
               class="news-content"
