@@ -51,68 +51,16 @@ const commentsAdminList =
   );
 
 
-// =========================================
-// BREAKING NEWS
-// =========================================
-
-saveBreaking.addEventListener(
-  "click",
-  async () => {
-
-    const text =
-      breakingNews.value.trim();
+const newsSections =
+  document.getElementById(
+    "newsSections"
+  );
 
 
-    if (!text) {
-
-      alert(
-        "Breaking News నమోదు చేయండి."
-      );
-
-      return;
-
-    }
-
-
-    try {
-
-      await setDoc(
-        doc(
-          db,
-          "settings",
-          "breaking"
-        ),
-        {
-          text: text
-        }
-      );
-
-
-      alert(
-        "Breaking News Save అయింది."
-      );
-
-
-      breakingNews.value =
-        "";
-
-    }
-
-    catch (err) {
-
-      console.error(
-        err
-      );
-
-
-      alert(
-        "Save కాలేదు."
-      );
-
-    }
-
-  }
-);
+const addSectionBtn =
+  document.getElementById(
+    "addSectionBtn"
+  );
 
 
 // =========================================
@@ -128,326 +76,723 @@ let editId =
 
 
 // =========================================
-// PUBLISH NEWS
+// NEWS SECTIONS
 // =========================================
 
-publishBtn.addEventListener(
-  "click",
-  async () => {
+function addNewsSection(
+  subheading = "",
+  paragraph = ""
+) {
 
-    console.log(
-      "Publish button clicked"
+  if (!newsSections) {
+
+    return;
+
+  }
+
+
+  const section =
+    document.createElement(
+      "div"
     );
 
 
-    const title =
-      document
-        .getElementById("title")
-        .value
-        .trim();
+  section.className =
+    "news-section";
 
 
-    const details =
-      document
-        .getElementById("details")
-        .value
-        .trim();
+  section.innerHTML = `
+
+    <input
+      type="text"
+      class="subheading"
+      placeholder="Subheading (Optional)"
+      value="${escapeHTML(subheading)}"
+    >
+
+    <textarea
+      class="paragraph"
+      rows="5"
+      placeholder="Paragraph"
+    >${escapeHTML(paragraph)}</textarea>
+
+    <button
+      type="button"
+      class="remove-section"
+    >
+      ❌ Remove Section
+    </button>
+
+  `;
 
 
-    const category =
-      document
-        .getElementById("category")
-        .value;
+  const removeBtn =
+    section.querySelector(
+      ".remove-section"
+    );
 
 
-    const imageFile =
-      document
-        .getElementById("image")
-        .files[0];
+  removeBtn.addEventListener(
+    "click",
+    () => {
 
-
-    if (
-      !title ||
-      !details ||
-      (!imageFile && !editMode)
-    ) {
-
-      alert(
-        "అన్ని వివరాలు నమోదు చేయండి."
-      );
-
-      return;
+      section.remove();
 
     }
+  );
 
 
-    try {
+  newsSections.appendChild(
+    section
+  );
 
-      let imageURL =
-        "";
-
-
-      // ===================================
-      // CLOUDINARY IMAGE UPLOAD
-      // ===================================
-
-      if (imageFile) {
-
-        const formData =
-          new FormData();
+}
 
 
-        formData.append(
-          "file",
-          imageFile
+// =========================================
+// GET NEWS SECTIONS
+// =========================================
+
+function getNewsSections() {
+
+  if (!newsSections) {
+
+    return [];
+
+  }
+
+
+  return Array.from(
+    newsSections.querySelectorAll(
+      ".news-section"
+    )
+  )
+  .map(
+    section => {
+
+      const subheading =
+        section
+          .querySelector(
+            ".subheading"
+          )
+          .value
+          .trim();
+
+
+      const paragraph =
+        section
+          .querySelector(
+            ".paragraph"
+          )
+          .value
+          .trim();
+
+
+      return {
+
+        subheading:
+          subheading,
+
+        paragraph:
+          paragraph
+
+      };
+
+    }
+  )
+  .filter(
+    section =>
+      section.paragraph
+  );
+
+}
+
+
+// =========================================
+// SECTIONS TO DETAILS
+// =========================================
+
+function sectionsToDetails(
+  sections
+) {
+
+  return sections
+    .map(
+      section => {
+
+        const heading =
+          section.subheading
+            ? section.subheading + "\n"
+            : "";
+
+
+        return (
+          heading +
+          section.paragraph
         );
 
+      }
+    )
+    .join(
+      "\n\n"
+    )
+    .trim();
 
-        formData.append(
-          "upload_preset",
-          "News_upload"
+}
+
+
+// =========================================
+// CLEAR NEWS SECTIONS
+// =========================================
+
+function clearNewsSections() {
+
+  if (!newsSections) {
+
+    return;
+
+  }
+
+
+  newsSections.innerHTML =
+    "";
+
+
+  addNewsSection();
+
+}
+
+
+// =========================================
+// LOAD SECTIONS INTO FORM
+// =========================================
+
+function loadSectionsIntoForm(
+  sections
+) {
+
+  if (!newsSections) {
+
+    return;
+
+  }
+
+
+  newsSections.innerHTML =
+    "";
+
+
+  if (
+    !Array.isArray(sections) ||
+    !sections.length
+  ) {
+
+    addNewsSection();
+
+    return;
+
+  }
+
+
+  sections.forEach(
+    section => {
+
+      addNewsSection(
+
+        section.subheading ||
+        "",
+
+        section.paragraph ||
+        ""
+
+      );
+
+    }
+  );
+
+}
+
+
+// =========================================
+// ADD SECTION BUTTON
+// =========================================
+
+if (addSectionBtn) {
+
+  addSectionBtn.addEventListener(
+    "click",
+    () => {
+
+      addNewsSection();
+
+    }
+  );
+
+}
+
+
+// =========================================
+// BREAKING NEWS
+// =========================================
+
+if (
+  saveBreaking &&
+  breakingNews
+) {
+
+  saveBreaking.addEventListener(
+    "click",
+    async () => {
+
+      const text =
+        breakingNews.value.trim();
+
+
+      if (!text) {
+
+        alert(
+          "Breaking News నమోదు చేయండి."
         );
 
-
-        const upload =
-          await fetch(
-            "https://api.cloudinary.com/v1_1/zzofbzm1/image/upload",
-            {
-              method:
-                "POST",
-
-              body:
-                formData
-            }
-          );
-
-
-        const uploadData =
-          await upload.json();
-
-
-        imageURL =
-          uploadData.secure_url;
+        return;
 
       }
 
 
+      try {
+
+        await setDoc(
+          doc(
+            db,
+            "settings",
+            "breaking"
+          ),
+          {
+
+            text:
+              text
+
+          }
+        );
+
+
+        alert(
+          "Breaking News Save అయింది."
+        );
+
+
+        breakingNews.value =
+          "";
+
+      }
+
+      catch (err) {
+
+        console.error(
+          err
+        );
+
+
+        alert(
+          "Save కాలేదు."
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+// =========================================
+// PUBLISH NEWS
+// =========================================
+
+if (publishBtn) {
+
+  publishBtn.addEventListener(
+    "click",
+    async () => {
+
+      console.log(
+        "Publish button clicked"
+      );
+
+
+      const title =
+        document
+          .getElementById(
+            "title"
+          )
+          .value
+          .trim();
+
+
+      const sections =
+        getNewsSections();
+
+
+      const details =
+        sectionsToDetails(
+          sections
+        );
+
+
+      const category =
+        document
+          .getElementById(
+            "category"
+          )
+          .value;
+
+
+      const imageFile =
+        document
+          .getElementById(
+            "image"
+          )
+          .files[0];
+
+
       // ===================================
-      // UPDATE NEWS
+      // VALIDATION
       // ===================================
 
-      if (editMode) {
+      if (
+        !title ||
+        !details ||
+        (
+          !imageFile &&
+          !editMode
+        )
+      ) {
 
-        const docSnap =
-          await getDoc(
+        alert(
+          "Title, Paragraph మరియు Image నమోదు చేయండి."
+        );
+
+        return;
+
+      }
+
+
+      try {
+
+        let imageURL =
+          "";
+
+
+        // =================================
+        // CLOUDINARY IMAGE UPLOAD
+        // =================================
+
+        if (imageFile) {
+
+          const formData =
+            new FormData();
+
+
+          formData.append(
+            "file",
+            imageFile
+          );
+
+
+          formData.append(
+            "upload_preset",
+            "News_upload"
+          );
+
+
+          const upload =
+            await fetch(
+              "https://api.cloudinary.com/v1_1/zzofbzm1/image/upload",
+              {
+
+                method:
+                  "POST",
+
+                body:
+                  formData
+
+              }
+            );
+
+
+          const uploadData =
+            await upload.json();
+
+
+          if (
+            !uploadData.secure_url
+          ) {
+
+            console.error(
+              uploadData
+            );
+
+
+            throw new Error(
+              "Image upload failed"
+            );
+
+          }
+
+
+          imageURL =
+            uploadData.secure_url;
+
+        }
+
+
+        // =================================
+        // UPDATE EXISTING NEWS
+        // =================================
+
+        if (editMode) {
+
+          const docRef =
             doc(
               db,
               "news",
               editId
-            )
+            );
+
+
+          const docSnap =
+            await getDoc(
+              docRef
+            );
+
+
+          if (
+            !docSnap.exists()
+          ) {
+
+            alert(
+              "వార్త కనిపించలేదు."
+            );
+
+            return;
+
+          }
+
+
+          const oldData =
+            docSnap.data();
+
+
+          await updateDoc(
+            docRef,
+            {
+
+              title:
+                title,
+
+              details:
+                details,
+
+              sections:
+                sections,
+
+              category:
+                category,
+
+              image:
+                imageURL ||
+                oldData.image ||
+                ""
+
+            }
           );
 
 
-        const oldData =
-          docSnap.data();
+          alert(
+            "వార్త Update అయింది."
+          );
 
 
-        await updateDoc(
-          doc(
-            db,
-            "news",
-            editId
-          ),
-          {
-
-            title:
-              title,
-
-            details:
-              details,
-
-            category:
-              category,
-
-            image:
-              imageURL ||
-              oldData.image
-
-          }
-        );
+          editMode =
+            false;
 
 
-        alert(
-          "వార్త Update అయింది."
-        );
+          editId =
+            "";
 
 
-        editMode =
-          false;
+          publishBtn.innerText =
+            "Publish";
+
+        }
 
 
-        editId =
+        // =================================
+        // CREATE NEW NEWS
+        // =================================
+
+        else {
+
+          await addDoc(
+            collection(
+              db,
+              "news"
+            ),
+            {
+
+              title:
+                title,
+
+              details:
+                details,
+
+              sections:
+                sections,
+
+              category:
+                category,
+
+              image:
+                imageURL,
+
+              createdAt:
+                new Date()
+
+            }
+          );
+
+
+          console.log(
+            "News saved to Firestore"
+          );
+
+
+          alert(
+            "వార్త విజయవంతంగా Publish అయింది!"
+          );
+
+
+          // ===============================
+          // SEND NOTIFICATION
+          // ===============================
+
+          fetch(
+            "https://rambantu-vayu-putrudu-server.onrender.com/send",
+            {
+
+              method:
+                "POST",
+
+              headers:
+                {
+                  "Content-Type":
+                    "application/json"
+                },
+
+              body:
+                JSON.stringify({
+
+                  title:
+                    title,
+
+                  message:
+                    details.substring(
+                      0,
+                      100
+                    ),
+
+                  url:
+                    "https://rambantu-vayu-putrudu.web.app"
+
+                })
+
+            }
+          )
+
+          .then(
+            async response => {
+
+              console.log(
+                "Notification Status:",
+                response.status
+              );
+
+
+              console.log(
+                "Notification Response:",
+                await response.text()
+              );
+
+            }
+          )
+
+          .catch(
+            error => {
+
+              console.error(
+                "Notification Error:",
+                error
+              );
+
+            }
+          );
+
+        }
+
+
+        // =================================
+        // CLEAR FORM
+        // =================================
+
+        document
+          .getElementById(
+            "title"
+          )
+          .value =
           "";
 
 
-        publishBtn.innerText =
-          "Publish";
+        document
+          .getElementById(
+            "category"
+          )
+          .value =
+          "";
+
+
+        document
+          .getElementById(
+            "image"
+          )
+          .value =
+          "";
+
+
+        clearNewsSections();
+
+
+        await loadNews();
 
       }
 
+      catch (err) {
 
-      // ===================================
-      // NEW NEWS
-      // ===================================
-
-      else {
-
-        await addDoc(
-          collection(
-            db,
-            "news"
-          ),
-          {
-
-            title:
-              title,
-
-            details:
-              details,
-
-            category:
-              category,
-
-            image:
-              imageURL,
-
-            createdAt:
-              new Date()
-
-          }
-        );
-
-
-        console.log(
-          "News saved to Firestore"
+        console.error(
+          "Publish Error:",
+          err
         );
 
 
         alert(
-          "వార్త విజయవంతంగా Publish అయింది!"
-        );
-
-
-        // =================================
-        // SEND NOTIFICATION
-        // =================================
-
-        fetch(
-          "https://rambantu-vayu-putrudu-server.onrender.com/send",
-          {
-
-            method:
-              "POST",
-
-            headers:
-              {
-                "Content-Type":
-                  "application/json"
-              },
-
-            body:
-              JSON.stringify({
-
-                title:
-                  title,
-
-                message:
-                  details.substring(
-                    0,
-                    100
-                  ),
-
-                url:
-                  "https://rambantu-vayu-putrudu.web.app"
-
-              })
-
-          }
-
-        )
-
-        .then(
-          async response => {
-
-            console.log(
-              "Notification Status:",
-              response.status
-            );
-
-
-            console.log(
-              "Notification Response:",
-              await response.text()
-            );
-
-          }
-        )
-
-        .catch(
-          error => {
-
-            console.error(
-              "Notification Error:",
-              error
-            );
-
-          }
+          "Publish కాలేదు."
         );
 
       }
 
-
-      // ===================================
-      // CLEAR FORM
-      // ===================================
-
-      document
-        .getElementById("title")
-        .value =
-        "";
-
-
-      document
-        .getElementById("details")
-        .value =
-        "";
-
-
-      document
-        .getElementById("image")
-        .value =
-        "";
-
-
-      await loadNews();
-
     }
+  );
 
-    catch (err) {
-
-      console.error(
-        err
-      );
-
-
-      alert(
-        "Publish కాలేదు."
-      );
-
-    }
-
-  }
-);
+}
 
 
 // =========================================
@@ -456,80 +801,129 @@ publishBtn.addEventListener(
 
 async function loadNews() {
 
+  if (!newsList) {
+
+    return;
+
+  }
+
+
   newsList.innerHTML =
     "";
 
 
-  const q =
-    query(
-      collection(
-        db,
-        "news"
-      ),
-      orderBy(
-        "createdAt",
-        "desc"
-      )
-    );
+  try {
+
+    const q =
+      query(
+        collection(
+          db,
+          "news"
+        ),
+        orderBy(
+          "createdAt",
+          "desc"
+        )
+      );
 
 
-  const snapshot =
-    await getDocs(
-      q
-    );
+    const snapshot =
+      await getDocs(
+        q
+      );
 
 
-  snapshot.forEach(
-    (newsDoc) => {
+    if (
+      snapshot.empty
+    ) {
 
-      const news =
-        newsDoc.data();
+      newsList.innerHTML = `
 
-
-      newsList.innerHTML += `
-
-        <div class="card">
-
-          <img
-            src="${news.image || ""}"
-            class="news-image"
-          >
-
-          <h3>
-            ${news.title || ""}
-          </h3>
-
-          <p>
-            ${(news.details || "").substring(
-              0,
-              100
-            )}...
-          </p>
-
-
-          <button
-            onclick="editNews('${newsDoc.id}')"
-          >
-
-            ✏️ Edit
-
-          </button>
-
-
-          <button
-            onclick="deleteNews('${newsDoc.id}')"
-          >
-
-            🗑️ Delete
-
-          </button>
-
-        </div>
+        <p>
+          ఇంకా వార్తలు లేవు.
+        </p>
 
       `;
 
+      return;
+
     }
-  );
+
+
+    snapshot.forEach(
+      newsDoc => {
+
+        const news =
+          newsDoc.data();
+
+
+        newsList.innerHTML += `
+
+          <div class="card">
+
+            <img
+              src="${escapeHTML(
+                news.image || ""
+              )}"
+              class="news-image"
+            >
+
+            <h3>
+              ${escapeHTML(
+                news.title || ""
+              )}
+            </h3>
+
+            <p>
+              ${escapeHTML(
+                (
+                  news.details ||
+                  ""
+                ).substring(
+                  0,
+                  100
+                )
+              )}${news.details ? "..." : ""}
+            </p>
+
+            <button
+              onclick="editNews('${newsDoc.id}')"
+            >
+              ✏️ Edit
+            </button>
+
+            <button
+              onclick="deleteNews('${newsDoc.id}')"
+            >
+              🗑️ Delete
+            </button>
+
+          </div>
+
+        `;
+
+      }
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Load News Error:",
+      error
+    );
+
+
+    newsList.innerHTML = `
+
+      <p>
+        వార్తలు Load కాలేదు.
+      </p>
+
+    `;
+
+  }
 
 }
 
@@ -539,7 +933,9 @@ async function loadNews() {
 // =========================================
 
 window.deleteNews =
-  async function (id) {
+  async function (
+    id
+  ) {
 
     if (
       !confirm(
@@ -594,68 +990,156 @@ window.deleteNews =
 // =========================================
 
 window.editNews =
-  async function (id) {
+  async function (
+    id
+  ) {
 
-    const docRef =
-      doc(
-        db,
-        "news",
-        id
+    try {
+
+      const docRef =
+        doc(
+          db,
+          "news",
+          id
+        );
+
+
+      const docSnap =
+        await getDoc(
+          docRef
+        );
+
+
+      if (
+        !docSnap.exists()
+      ) {
+
+        alert(
+          "వార్త కనిపించలేదు."
+        );
+
+        return;
+
+      }
+
+
+      const news =
+        docSnap.data();
+
+
+      // ===================================
+      // TITLE
+      // ===================================
+
+      document
+        .getElementById(
+          "title"
+        )
+        .value =
+        news.title ||
+        "";
+
+
+      // ===================================
+      // SECTIONS
+      // ===================================
+
+      if (
+        Array.isArray(
+          news.sections
+        ) &&
+        news.sections.length
+      ) {
+
+        loadSectionsIntoForm(
+          news.sections
+        );
+
+      }
+
+      else {
+
+        // ================================
+        // OLD NEWS COMPATIBILITY
+        // ================================
+
+        loadSectionsIntoForm(
+          [
+            {
+
+              subheading:
+                "",
+
+              paragraph:
+                news.details ||
+                ""
+
+            }
+          ]
+        );
+
+      }
+
+
+      // ===================================
+      // CATEGORY
+      // ===================================
+
+      document
+        .getElementById(
+          "category"
+        )
+        .value =
+        news.category ||
+        "";
+
+
+      // ===================================
+      // EDIT MODE
+      // ===================================
+
+      editMode =
+        true;
+
+
+      editId =
+        id;
+
+
+      publishBtn.innerText =
+        "Update News";
+
+
+      window.scrollTo({
+
+        top:
+          0,
+
+        behavior:
+          "smooth"
+
+      });
+
+
+      alert(
+        "వార్త Edit చేయడానికి సిద్ధంగా ఉంది."
       );
-
-
-    const docSnap =
-      await getDoc(
-        docRef
-      );
-
-
-    if (
-      !docSnap.exists()
-    ) {
-
-      return;
 
     }
 
+    catch (error) {
 
-    const news =
-      docSnap.data();
-
-
-    document
-      .getElementById("title")
-      .value =
-      news.title || "";
+      console.error(
+        "Edit News Error:",
+        error
+      );
 
 
-    document
-      .getElementById("details")
-      .value =
-      news.details || "";
+      alert(
+        "వార్త Edit చేయలేకపోయాము."
+      );
 
-
-    document
-      .getElementById("category")
-      .value =
-      news.category || "";
-
-
-    editMode =
-      true;
-
-
-    editId =
-      id;
-
-
-    publishBtn.innerText =
-      "Update News";
-
-
-    alert(
-      "వార్త Edit చేయడానికి సిద్ధంగా ఉంది."
-    );
+    }
 
   };
 
@@ -666,7 +1150,9 @@ window.editNews =
 
 async function loadAdminComments() {
 
-  if (!commentsAdminList) {
+  if (
+    !commentsAdminList
+  ) {
 
     return;
 
@@ -720,7 +1206,7 @@ async function loadAdminComments() {
 
 
     snapshot.forEach(
-      (commentDoc) => {
+      commentDoc => {
 
         const comment =
           commentDoc.data();
@@ -758,7 +1244,6 @@ async function loadAdminComments() {
               }
             </h3>
 
-
             <p>
               ${
                 escapeHTML(
@@ -768,27 +1253,18 @@ async function loadAdminComments() {
               }
             </p>
 
-
             <small>
               ${escapeHTML(
                 dateText
               )}
             </small>
 
-
             <br><br>
 
-
             <button
-              onclick="
-                deleteComment(
-                  '${commentDoc.id}'
-                )
-              "
+              onclick="deleteComment('${commentDoc.id}')"
             >
-
               🗑️ Delete Comment
-
             </button>
 
           </div>
@@ -898,7 +1374,9 @@ function escapeHTML(
 
 
   div.textContent =
-    text;
+    String(
+      text
+    );
 
 
   return div.innerHTML;
@@ -909,6 +1387,20 @@ function escapeHTML(
 // =========================================
 // START
 // =========================================
+
+// మొదట కనీసం ఒక section ఉండాలి
+
+if (
+  newsSections &&
+  !newsSections.querySelector(
+    ".news-section"
+  )
+) {
+
+  addNewsSection();
+
+}
+
 
 loadNews();
 
