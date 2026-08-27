@@ -144,7 +144,8 @@ onAuthStateChanged(
 // =========================================
 
 async function loadNews() {
-
+console.log("NEWS DEBUG: loadNews started");
+console.log("NEWS DEBUG: News ID =", id);
   if (!id) {
 
     newsDetails.innerHTML =
