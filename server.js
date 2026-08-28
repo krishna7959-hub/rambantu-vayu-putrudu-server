@@ -1,240 +1,211 @@
-const { initializeApp, cert } = require("firebase-admin/app");
-const { getFirestore } = require("firebase-admin/firestore");
-
 const express = require("express");
 const cors = require("cors");
-
-// ------------------------------------
-// Firebase Admin
-// ------------------------------------
-
-initializeApp({
-  credential: cert(
-    JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-  )
-});
-
-const db = getFirestore();
-
-// ------------------------------------
-// Express
-// ------------------------------------
+const OneSignal = require("onesignal-node");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// ------------------------------------
-// Health Check
-// ------------------------------------
+/* =========================================
+   ONESIGNAL
+========================================= */
 
-app.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "Rambantu Vayu Putrudu Notification Server is running."
-  });
-});
-
-// ------------------------------------
-// Send Push Notification
-// ------------------------------------
+const client = new OneSignal.Client(
+  "ca312fa3-511f-4b36-ab0e-8d774ab70cfc",
+  process.env.ONESIGNAL_API_KEY
+);
 
 app.post("/send", async (req, res) => {
 
+  console.log("Received /send request");
+  console.log(req.body);
+
   try {
 
-    console.log("=================================");
-    console.log("Notification Request Received");
-    console.log("=================================");
+    const notification = {
 
-    console.log("Request Body:", req.body);
+      contents: {
+        en: req.body.message
+      },
 
-    const title = String(req.body.title || "").trim();
-    const message = String(req.body.message || "").trim();
-    const url = String(
-      req.body.url || "https://rambantu-vayu-putrudu.web.app"
-    ).trim();
+      headings: {
+        en: req.body.title
+      },
 
-    if (!title || !message) {
+      include_subscription_ids: [
+        "cd8c2b86-10a7-481a-9edd-87dff4c1273d",
+        "d1eb7680-03d9-4465-bc10-163424ef4fab"
+      ],
 
-      return res.status(400).json({
-        success: false,
-        message: "Title and message are required."
-      });
+      target_channel: "push",
 
-    }
+      url: req.body.url
+    };
 
-    // --------------------------------
-    // Get OneSignal Subscription IDs
-    // --------------------------------
+    console.log("Notification Object:", notification);
 
-    const snapshot = await db
-      .collection("subscriptions")
-      .get();
+    const response = await client.createNotification(notification);
 
-    const subscriptionIds = [];
+    console.log("OneSignal Response:", response);
 
-    snapshot.forEach((doc) => {
+    res.json(response);
 
-      const data = doc.data();
+  } catch (err) {
 
-      // Preferred field:
-      // subscriptionId
-      //
-      // Fallback:
-      // document ID
+    console.error("OneSignal Error:", err);
 
-      const subscriptionId =
-        data.subscriptionId || doc.id;
-
-      if (subscriptionId) {
-        subscriptionIds.push(subscriptionId);
-      }
-
-    });
-
-    console.log(
-      "OneSignal Subscription IDs:",
-      subscriptionIds
-    );
-
-    // --------------------------------
-    // No Subscribers
-    // --------------------------------
-
-    if (subscriptionIds.length === 0) {
-
-      return res.json({
-        success: false,
-        message: "No OneSignal subscriptions found.",
-        count: 0
-      });
-
-    }
-
-    // --------------------------------
-    // OneSignal API
-    // --------------------------------
-
-    const response = await fetch(
-      "https://api.onesignal.com/notifications?c=push",
-      {
-        method: "POST",
-
-        headers: {
-          "Authorization":
-            `Key ${process.env.ONESIGNAL_API_KEY}`,
-
-          "Content-Type":
-            "application/json"
-        },
-
-        body: JSON.stringify({
-
-          app_id:
-            process.env.ONESIGNAL_APP_ID,
-
-          include_subscription_ids:
-            subscriptionIds,
-
-          headings: {
-            en: title
-          },
-
-          contents: {
-            en: message
-          },
-
-          target_channel:
-            "push",
-
-          url: url
-
-        })
-      }
-    );
-
-    // --------------------------------
-    // OneSignal Response
-    // --------------------------------
-
-    const data = await response.json();
-
-    console.log(
-      "OneSignal HTTP Status:",
-      response.status
-    );
-
-    console.log(
-      "OneSignal Response:",
-      data
-    );
-
-    // --------------------------------
-    // API Error
-    // --------------------------------
-
-    if (!response.ok) {
-
-      return res.status(response.status).json({
-
-        success: false,
-
-        message:
-          "OneSignal API returned an error.",
-
-        onesignal: data
-
-      });
-
-    }
-
-    // --------------------------------
-    // Success
-    // --------------------------------
-
-    return res.json({
-
-      success: true,
-
-      message:
-        "Notification sent successfully.",
-
-      subscriptionCount:
-        subscriptionIds.length,
-
-      onesignal:
-        data
-
-    });
-
-  } catch (error) {
-
-    console.error(
-      "Notification Server Error:",
-      error
-    );
-
-    return res.status(500).json({
-
-      success: false,
-
-      error:
-        error.message
-
-    });
+    res.status(500).json(err);
 
   }
 
 });
 
-// ------------------------------------
-// Start Server
-// ------------------------------------
 
-const PORT =
-  process.env.PORT || 3000;
+/* =========================================
+   DYNAMIC SITEMAP
+========================================= */
+
+app.get("/sitemap.xml", async (req, res) => {
+
+  try {
+
+    const projectId = "rambantu-vayu-putrudu";
+
+    const apiKey =
+      process.env.FIREBASE_API_KEY ||
+      "AIzaSyDExlU66IL0hE1H-DDkmok_IpkBm-haTqg";
+
+    const firestoreURL =
+      `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/news?key=${apiKey}`;
+
+    console.log("Creating dynamic sitemap...");
+
+    const response = await fetch(firestoreURL);
+
+    if (!response.ok) {
+
+      throw new Error(
+        `Firestore request failed: ${response.status}`
+      );
+
+    }
+
+    const data = await response.json();
+
+    const documents = data.documents || [];
+
+    const siteURL =
+      "https://rambantu-vayu-putrudu.web.app";
+
+    let urls = "";
+
+    /* Homepage */
+
+    urls += `
+    <url>
+      <loc>${siteURL}/</loc>
+      <changefreq>daily</changefreq>
+      <priority>1.0</priority>
+    </url>`;
+
+    /* News Articles */
+
+    documents.forEach((doc) => {
+
+      const documentName = doc.name || "";
+
+      const newsId =
+        documentName.split("/").pop();
+
+      if (!newsId) return;
+
+      let lastmod = "";
+
+      if (
+        doc.fields &&
+        doc.fields.createdAt &&
+        doc.fields.createdAt.timestampValue
+      ) {
+
+        lastmod =
+          doc.fields.createdAt.timestampValue
+            .split("T")[0];
+
+      }
+
+      urls += `
+      <url>
+
+        <loc>${siteURL}/news.html?id=${encodeURIComponent(newsId)}</loc>
+
+        ${
+          lastmod
+            ? `<lastmod>${lastmod}</lastmod>`
+            : ""
+        }
+
+        <changefreq>weekly</changefreq>
+
+        <priority>0.8</priority>
+
+      </url>`;
+
+    });
+
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+
+<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+${urls}
+
+</urlset>`;
+
+    res.set("Content-Type", "application/xml");
+
+    res.send(sitemap);
+
+    console.log(
+      `Sitemap created successfully. News count: ${documents.length}`
+    );
+
+  } catch (error) {
+
+    console.error("Sitemap Error:", error);
+
+    res.status(500).send(
+      "Sitemap generation failed"
+    );
+
+  }
+
+});
+
+
+/* =========================================
+   ROBOTS.TXT
+========================================= */
+
+app.get("/robots.txt", (req, res) => {
+
+  res.type("text/plain");
+
+  res.send(
+`User-agent: *
+Allow: /
+
+Sitemap: https://rambantu-vayu-putrudu-server.onrender.com/sitemap.xml`
+  );
+
+});
+
+
+/* =========================================
+   SERVER
+========================================= */
+
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
 

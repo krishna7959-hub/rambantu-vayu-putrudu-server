@@ -218,13 +218,48 @@ console.log("NEWS DEBUG: News ID =", id);
 
         </p>
 
+<!-- NEWS DETAILS -->
 
-        <!-- NEWS DETAILS -->
+<div class="news-details">
 
-        <p>
-          ${escapeHTML(news.details || "")}
-        </p>
+  ${
+    Array.isArray(news.sections) &&
+    news.sections.length
 
+      ? news.sections
+          .map(section => `
+
+            ${
+              section.subheading
+                ? `
+                  <h3 class="news-subheading">
+                    ${escapeHTML(
+                      section.subheading
+                    )}
+                  </h3>
+                `
+                : ""
+            }
+
+            <p class="news-paragraph">
+              ${escapeHTML(
+                section.paragraph || ""
+              )}
+            </p>
+
+          `)
+          .join("")
+
+      : `
+          <p class="news-paragraph">
+            ${escapeHTML(
+              news.details || ""
+            )}
+          </p>
+        `
+  }
+
+</div>
 
         <br>
 
