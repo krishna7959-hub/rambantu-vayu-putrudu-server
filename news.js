@@ -2,7 +2,7 @@ import {
   db,
   auth,
   googleProvider
-} from "./firebase.js";
+} from "./firebase.js?v=20260831-2";
 
 import {
   signInWithPopup,
@@ -1794,5 +1794,29 @@ async function loadRelatedNews(
 // =========================================
 
 window.addEventListener("DOMContentLoaded", () => {
-  loadNews();
+
+  console.log("NEWS DEBUG: DOMContentLoaded");
+
+  loadNews().catch(error => {
+
+    console.error(
+      "NEWS DEBUG: loadNews failed:",
+      error
+    );
+
+    if (newsDetails) {
+
+      newsDetails.innerHTML = `
+        <h2>News Load కాలేదు.</h2>
+        <p style="color:red;">
+          ${escapeHTML(
+            error.message || "Unknown Error"
+          )}
+        </p>
+      `;
+
+    }
+
+  });
+
 });
