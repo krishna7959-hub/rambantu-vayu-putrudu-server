@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
-  getFirestore
+  initializeFirestore
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
@@ -29,7 +29,9 @@ const app =
 
 
 export const db =
-  getFirestore(app);
+  initializeFirestore(app, {
+    experimentalForceLongPolling: true
+  });
 
 
 export const storage =
