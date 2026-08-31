@@ -1793,4 +1793,6 @@ async function loadRelatedNews(
 // START
 // =========================================
 
-loadNews();
+window.addEventListener("DOMContentLoaded", () => {
+  loadNews();
+});
