@@ -1,4 +1,6 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
   initializeFirestore
@@ -28,21 +30,40 @@ const app =
   initializeApp(firebaseConfig);
 
 
+// =========================================
+// FIRESTORE
+// Facebook / In-App Browser Fix
+// =========================================
+
 export const db =
   initializeFirestore(app, {
-    experimentalForceLongPolling: true
+
+    experimentalForceLongPolling: true,
+
+    useFetchStreams: false
+
   });
 
+
+// =========================================
+// STORAGE
+// =========================================
 
 export const storage =
   getStorage(app);
 
 
-// 🔐 Authentication
+// =========================================
+// AUTHENTICATION
+// =========================================
+
 export const auth =
   getAuth(app);
 
 
-// 🔵 Google Login Provider
+// =========================================
+// GOOGLE LOGIN PROVIDER
+// =========================================
+
 export const googleProvider =
   new GoogleAuthProvider();
