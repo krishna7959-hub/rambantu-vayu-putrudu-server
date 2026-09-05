@@ -298,7 +298,6 @@ OneSignalDeferred.push(async function(OneSignal) {
 
     await saveSubscription();
 
-
     // =========================================
     // Listen for Subscription Changes
     // =========================================
@@ -314,6 +313,16 @@ OneSignalDeferred.push(async function(OneSignal) {
           );
 
           await saveSubscription();
+
+          const thanks = document.getElementById("subscribeThanks");
+
+          if (thanks && await OneSignal.User.PushSubscription.optedIn) {
+            thanks.style.display = "block";
+
+            setTimeout(() => {
+              thanks.style.display = "none";
+            }, 4000);
+          }
 
         }
       );
@@ -344,6 +353,8 @@ OneSignalDeferred.push(async function(OneSignal) {
 
 </script>
 
+
+<div id="subscribeThanks" style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#222; color:#fff; padding:12px 20px; border-radius:25px; z-index:99999; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,.25);">🔔 Thanks for subscribing!</div>
 
 <button
   id="topBtn"
