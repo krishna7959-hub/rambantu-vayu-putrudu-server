@@ -33,9 +33,8 @@ app.post("/send", async (req, res) => {
         en: req.body.title
       },
 
-      include_subscription_ids: [
-        "cd8c2b86-10a7-481a-9edd-87dff4c1273d",
-        "d1eb7680-03d9-4465-bc10-163424ef4fab"
+      included_segments: [
+        "Subscribed Users"
       ],
 
       target_channel: "push",
