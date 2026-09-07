@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const OneSignal = require("onesignal-node");
+
 const { initializeApp, cert } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 
@@ -19,11 +19,6 @@ app.use(express.json());
    ONESIGNAL
 ========================================= */
 
-const client = new OneSignal.Client(
-  "ca312fa3-511f-4b36-ab0e-8d774ab70cfc",
-  process.env.ONESIGNAL_API_KEY
-);
-
 app.post("/send", async (req, res) => {
 
   console.log("Received /send request");
@@ -31,43 +26,64 @@ app.post("/send", async (req, res) => {
 
   try {
 
-    const notification = {
+    const response = await fetch(
+      "https://api.onesignal.com/notifications",
+      {
+        method: "POST",
 
-      contents: {
-        en: req.body.message
-      },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Key ${process.env.ONESIGNAL_API_KEY}`
+        },
 
-      headings: {
-        en: req.body.title
-      },
+        body: JSON.stringify({
+          app_id: "ca312fa3-511f-4b36-ab0e-8d774ab70cfc",
+          target_channel: "push",
+          included_segments: ["Subscribed Users"],
 
-      included_segments: [
-        "Subscribed Users"
-      ],
+          headings: {
+            en: req.body.title
+          },
 
-      target_channel: "push",
+          contents: {
+            en: req.body.message
+          },
 
-      url: req.body.url
-    };
+          url: req.body.url
+        })
+      }
+    );
 
-    console.log("Notification Object:", notification);
+    const data = await response.json();
 
-    const response = await client.createNotification(notification);
+    console.log("OneSignal HTTP Status:", response.status);
+    console.log("OneSignal Response:", data);
 
-    console.log("OneSignal Response:", response);
+    if (!response.ok || !data.id) {
+      return res.status(502).json({
+        success: false,
+        message: "OneSignal did not create notification",
+        details: data
+      });
+    }
 
-    res.json(response);
+    res.json({
+      success: true,
+      id: data.id
+    });
 
   } catch (err) {
 
     console.error("OneSignal Error:", err);
 
-    res.status(500).json(err);
+    res.status(500).json({
+      success: false,
+      message: "Notification send failed"
+    });
 
   }
 
 });
-
 
 /* =========================================
    DYNAMIC SITEMAP
