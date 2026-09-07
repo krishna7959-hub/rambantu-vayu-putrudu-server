@@ -886,6 +886,10 @@ async function loadNews() {
               )}${news.details ? "..." : ""}
             </p>
 
+            <p>
+              👁️ Views: ${news.views || 0}
+            </p>
+
             <button
               onclick="editNews('${newsDoc.id}')"
             >
