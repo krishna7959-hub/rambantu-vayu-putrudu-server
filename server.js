@@ -39,7 +39,7 @@ app.post("/send", async (req, res) => {
         body: JSON.stringify({
           app_id: "ca312fa3-511f-4b36-ab0e-8d774ab70cfc",
           target_channel: "push",
-          included_segments: ["Subscribed Users"],
+          included_segments: ["Active Subscriptions"],
 
           headings: {
             en: req.body.title
