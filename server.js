@@ -1,14 +1,15 @@
 const express = require("express");
 const cors = require("cors");
 const OneSignal = require("onesignal-node");
-const admin = require("firebase-admin");
+const { initializeApp, cert } = require("firebase-admin/app");
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 
 const app = express();
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+initializeApp({
+  credential: cert(serviceAccount)
 });
 
 app.use(cors());
@@ -239,7 +240,7 @@ app.post("/view", async (req, res) => {
     }
 
     await newsRef.update({
-      views: admin.firestore.FieldValue.increment(1)
+      views: FieldValue.increment(1)
     });
 
     res.json({
