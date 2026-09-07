@@ -175,6 +175,22 @@ console.log("NEWS DEBUG: News ID =", id);
     const news =
       docSnap.data();
 
+    const viewKey = "viewed_" + id;
+
+    if (!sessionStorage.getItem(viewKey)) {
+      sessionStorage.setItem(viewKey, "true");
+
+      fetch("https://rambantu-vayu-putrudu-server.onrender.com/view", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ newsId: id })
+      }).catch(error => {
+        console.error("View Counter Error:", error);
+      });
+    }
+
 
     newsDetails.innerHTML = `
 

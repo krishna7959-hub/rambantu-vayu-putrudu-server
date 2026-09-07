@@ -1,8 +1,15 @@
 const express = require("express");
 const cors = require("cors");
 const OneSignal = require("onesignal-node");
+const admin = require("firebase-admin");
 
 const app = express();
+
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 app.use(cors());
 app.use(express.json());
@@ -199,6 +206,58 @@ Sitemap: https://rambantu-vayu-putrudu-server.onrender.com/sitemap.xml`
 
 });
 
+
+/* =========================================
+   NEWS VIEWS
+========================================= */
+
+app.post("/view", async (req, res) => {
+
+  try {
+
+    const newsId = req.body.newsId;
+
+    if (!newsId || typeof newsId !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid newsId"
+      });
+    }
+
+    const newsRef = admin
+      .firestore()
+      .collection("news")
+      .doc(newsId);
+
+    const newsSnap = await newsRef.get();
+
+    if (!newsSnap.exists) {
+      return res.status(404).json({
+        success: false,
+        message: "News not found"
+      });
+    }
+
+    await newsRef.update({
+      views: admin.firestore.FieldValue.increment(1)
+    });
+
+    res.json({
+      success: true
+    });
+
+  } catch (error) {
+
+    console.error("View Counter Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "View count update failed"
+    });
+
+  }
+
+});
 
 /* =========================================
    SERVER
