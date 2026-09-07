@@ -225,8 +225,7 @@ app.post("/view", async (req, res) => {
       });
     }
 
-    const newsRef = admin
-      .firestore()
+    const newsRef = getFirestore()
       .collection("news")
       .doc(newsId);
 
