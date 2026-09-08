@@ -1,4 +1,4 @@
-const CACHE_NAME = "rvp-news-v1";
+const CACHE_NAME = "rvp-news-v2";
 
 const urlsToCache = [
   "./",
@@ -10,7 +10,9 @@ const urlsToCache = [
   "./firebase.js",
   "./manifest.json",
   "./icon-192.png",
-  "./icon-512.png"
+  "./icon-512.png",
+  "./icon-192-maskable.png",
+  "./icon-512-maskable.png"
 ];
 
 self.addEventListener("install", event => {
