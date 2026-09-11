@@ -3,6 +3,7 @@ const cors = require("cors");
 
 const { initializeApp, cert } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { getAuth } = require("firebase-admin/auth");
 
 const app = express();
 
@@ -12,17 +13,97 @@ initializeApp({
   credential: cert(serviceAccount)
 });
 
-app.use(cors());
-app.use(express.json());
+async function requireAdmin(req, res, next) {
+  try {
+    const header = req.get("authorization") || "";
+
+    if (!header.startsWith("Bearer ")) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
+
+    const idToken = header.slice(7).trim();
+
+    if (!idToken || idToken.length > 10000) {
+      return res.status(401).json({ success: false, message: "Invalid authentication token" });
+    }
+
+    const decoded = await getAuth().verifyIdToken(idToken);
+
+    const adminUIDs = [
+      "dGNNq3QH2QfP5fe9P5lct5gHw073",
+      "Y0q7rzVUL2Xdanjpce1QqxsLf5k2"
+    ];
+
+    if (!adminUIDs.includes(decoded.uid)) {
+      return res.status(403).json({ success: false, message: "Admin access required" });
+    }
+
+    req.adminUid = decoded.uid;
+    return next();
+
+  } catch (error) {
+    console.error("Admin authentication failed");
+    return res.status(401).json({ success: false, message: "Invalid authentication token" });
+  }
+}
+
+const sendAttempts = new Map();
+
+function rateLimitSend(ip) {
+  const now = Date.now();
+  const windowMs = 60 * 1000;
+  const maxAttempts = 10;
+
+  const entry = sendAttempts.get(ip) || { start: now, count: 0 };
+
+  if (now - entry.start >= windowMs) {
+    entry.start = now;
+    entry.count = 0;
+  }
+
+  entry.count += 1;
+  sendAttempts.set(ip, entry);
+
+  return entry.count <= maxAttempts;
+}
+
+app.use(cors({ origin: ["https://rambantu-vayu-putrudu.web.app", "https://rambantu-vayu-putrudu.firebaseapp.com"], methods: ["GET", "POST"], allowedHeaders: ["Content-Type", "Authorization"] }));
+app.use(express.json({ limit: "20kb" }));
 
 /* =========================================
    ONESIGNAL
 ========================================= */
 
-app.post("/send", async (req, res) => {
+app.post("/send", requireAdmin, async (req, res) => {
+  if (!rateLimitSend(req.ip)) {
+    return res.status(429).json({
+      success: false,
+      message: "Too many notification requests"
+    });
+  }
 
-  console.log("Received /send request");
-  console.log(req.body);
+
+  const title = typeof req.body?.title === "string" ? req.body.title.trim() : "";
+  const message = typeof req.body?.message === "string" ? req.body.message.trim() : "";
+  const url = typeof req.body?.url === "string" ? req.body.url.trim() : "";
+
+  if (!title || title.length > 200 || !message || message.length > 500) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid notification content"
+    });
+  }
+
+  const allowedUrl =
+    url === "https://rambantu-vayu-putrudu.web.app" ||
+    url === "https://rambantu-vayu-putrudu.web.app/";
+
+  if (!allowedUrl) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid notification URL"
+    });
+  }
 
   try {
 
@@ -42,14 +123,14 @@ app.post("/send", async (req, res) => {
           included_segments: ["Active Subscriptions"],
 
           headings: {
-            en: req.body.title
+            en: title
           },
 
           contents: {
-            en: req.body.message
+            en: message
           },
 
-          url: req.body.url
+          url: url
         })
       }
     );
@@ -96,8 +177,7 @@ app.get("/sitemap.xml", async (req, res) => {
     const projectId = "rambantu-vayu-putrudu";
 
     const apiKey =
-      process.env.FIREBASE_API_KEY ||
-      "AIzaSyDExlU66IL0hE1H-DDkmok_IpkBm-haTqg";
+      process.env.FIREBASE_API_KEY;
 
     const firestoreURL =
       `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/news?key=${apiKey}`;
@@ -228,13 +308,40 @@ Sitemap: https://rambantu-vayu-putrudu-server.onrender.com/sitemap.xml`
    NEWS VIEWS
 ========================================= */
 
+const viewAttempts = new Map();
+
+function rateLimitView(ip) {
+  const now = Date.now();
+  const windowMs = 60 * 1000;
+  const maxAttempts = 30;
+
+  const entry = viewAttempts.get(ip) || { start: now, count: 0 };
+
+  if (now - entry.start >= windowMs) {
+    entry.start = now;
+    entry.count = 0;
+  }
+
+  entry.count += 1;
+  viewAttempts.set(ip, entry);
+
+  return entry.count <= maxAttempts;
+}
+
 app.post("/view", async (req, res) => {
+
+  if (!rateLimitView(req.ip)) {
+    return res.status(429).json({
+      success: false,
+      message: "Too many view requests"
+    });
+  }
 
   try {
 
     const newsId = req.body.newsId;
 
-    if (!newsId || typeof newsId !== "string") {
+    if (!newsId || typeof newsId !== "string" || newsId.length > 200 || newsId.includes("/") || newsId.includes("\\")) {
       return res.status(400).json({
         success: false,
         message: "Invalid newsId"
