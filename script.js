@@ -1,5 +1,6 @@
 import {
-  db
+  db,
+  auth
 } from "./firebase.js";
 
 
@@ -676,39 +677,50 @@ if (publishBtn) {
           // SEND NOTIFICATION
           // ===============================
 
-          fetch(
-            "https://rambantu-vayu-putrudu-server.onrender.com/send",
-            {
+          const user = auth.currentUser;
 
-              method:
-                "POST",
+          if (!user) {
+            throw new Error("Admin authentication required");
+          }
 
-              headers:
-                {
-                  "Content-Type":
-                    "application/json"
-                },
+          user.getIdToken(true).then(idToken => {
 
-              body:
-                JSON.stringify({
+            return fetch(
+              "https://rambantu-vayu-putrudu-server.onrender.com/send",
+              {
 
-                  title:
-                    title,
+                method:
+                  "POST",
 
-                  message:
-                    details.substring(
-                      0,
-                      100
-                    ),
+                headers:
+                  {
+                    "Content-Type":
+                      "application/json",
+                    "Authorization":
+                      `Bearer ${idToken}`
+                  },
 
-                  url:
-                    "https://rambantu-vayu-putrudu.web.app"
+                body:
+                  JSON.stringify({
 
-                })
+                    title:
+                      title,
 
-            }
-          )
+                    message:
+                      details.substring(
+                        0,
+                        100
+                      ),
 
+                    url:
+                      "https://rambantu-vayu-putrudu.web.app"
+
+                  })
+
+              }
+            );
+
+          })
           .then(
             async response => {
 
@@ -716,7 +728,6 @@ if (publishBtn) {
                 "Notification Status:",
                 response.status
               );
-
 
               console.log(
                 "Notification Response:",
