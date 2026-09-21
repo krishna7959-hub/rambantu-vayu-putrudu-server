@@ -130,7 +130,8 @@ app.post("/send", requireAdmin, async (req, res) => {
             en: message
           },
 
-          url: url
+          url: url,
+          web_push_topic: "rvp-news-" + Date.now()
         })
       }
     );
