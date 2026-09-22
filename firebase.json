@@ -5,13 +5,6 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ],
-    "redirects": [
-      {
-        "source": "/sitemap.xml",
-        "destination": "https://rambantu-vayu-putrudu-server.onrender.com/sitemap.xml",
-        "type": 301
-      }
     ]
   },
   "firestore": {

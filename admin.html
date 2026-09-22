@@ -23,17 +23,20 @@
 <body>
 
 
-<script>
+<script type="module">
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { auth } from "./firebase.js";
 
-  if (
-    localStorage.getItem("adminLogin") !== "true"
-  ) {
+  const ADMIN_UIDS = [
+    "dGNNq3QH2QfP5fe9P5lct5gHw073",
+    "Y0q7rzVUL2Xdanjpce1QqxsLf5k2"
+  ];
 
-    window.location.href =
-      "login.html";
-
-  }
-
+  onAuthStateChanged(auth, (user) => {
+    if (!user || !ADMIN_UIDS.includes(user.uid)) {
+      window.location.href = "login.html";
+    }
+  });
 </script>
 
 

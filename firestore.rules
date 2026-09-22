@@ -1,45 +1,212 @@
 rules_version = '2';
 
 service cloud.firestore {
+
+  function isAdmin() {
+    return request.auth != null
+      && request.auth.uid in [
+        "dGNNq3QH2QfP5fe9P5lct5gHw073",
+        "Y0q7rzVUL2Xdanjpce1QqxsLf5k2"
+      ];
+  }
+
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
   match /databases/{database}/documents {
 
+    // =========================================
+    // NEWS
+    // =========================================
+
     match /news/{document} {
+
+      // Public can read news
       allow read: if true;
-      allow create, update, delete: if true;
+
+      // Only Admin can create/update/delete news
+      allow create, update, delete: if isAdmin();
     }
+
+
+    // =========================================
+    // SUBSCRIPTIONS
+    // =========================================
 
     match /subscriptions/{document} {
+
+      // Subscription data is private
       allow read: if false;
-      allow create, update: if true;
+
+      // OneSignal subscription ID must match
+      // the Firestore document ID.
+      allow create: if
+        request.resource.data.keys().hasOnly([
+          "subscriptionId",
+          "updatedAt",
+          "platform"
+        ])
+        && request.resource.data.keys().hasAll([
+          "subscriptionId",
+          "updatedAt",
+          "platform"
+        ])
+        && request.resource.data.subscriptionId == document
+        && request.resource.data.subscriptionId is string
+        && request.resource.data.subscriptionId.size() > 0
+        && request.resource.data.subscriptionId.size() <= 200
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.platform == "web";
+
+      allow update: if
+        request.resource.data.keys().hasOnly([
+          "subscriptionId",
+          "updatedAt",
+          "platform"
+        ])
+        && request.resource.data.keys().hasAll([
+          "subscriptionId",
+          "updatedAt",
+          "platform"
+        ])
+        && request.resource.data.subscriptionId == document
+        && request.resource.data.subscriptionId == resource.data.subscriptionId
+        && request.resource.data.subscriptionId is string
+        && request.resource.data.subscriptionId.size() > 0
+        && request.resource.data.subscriptionId.size() <= 200
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.platform == "web";
+
+      // Nobody deletes subscriptions from the client
       allow delete: if false;
     }
+
+
+    // =========================================
+    // FCM TOKENS
+    // =========================================
 
     match /fcmTokens/{document} {
-      allow read: if false;
-      allow create, update: if true;
-      allow delete: if false;
+
+      // Client must not access this collection
+      allow read, create, update, delete: if false;
     }
+
+
+    // =========================================
+    // SETTINGS
+    // =========================================
 
     match /settings/{document} {
+
+      // Public settings can be read
       allow read: if true;
-      allow write: if true;
+
+      // Only Admin can modify settings
+      allow write: if isAdmin();
     }
+
+
+    // =========================================
+    // COMMENTS
+    // =========================================
 
     match /comments/{document} {
+
+      // Anyone can read comments
       allow read: if true;
 
-      // Login చేసిన user మాత్రమే Comment/Reply చేయగలరు
-      allow create: if request.auth != null;
 
-      // Comment పెట్టిన వ్యక్తి మాత్రమే Edit/Delete చేయగలరు
-      allow update, delete:
-        if request.auth != null
-        && resource.data.userId == request.auth.uid
+      // -----------------------------------------
+      // CREATE COMMENT / REPLY
+      // -----------------------------------------
+
+      allow create: if
+        isSignedIn()
+        && request.resource.data.keys().hasOnly([
+          "newsId",
+          "userId",
+          "name",
+          "email",
+          "text",
+          "parentId",
+          "createdAt",
+          "updatedAt"
+        ])
+        && request.resource.data.keys().hasAll([
+          "newsId",
+          "userId",
+          "name",
+          "email",
+          "text",
+          "parentId",
+          "createdAt",
+          "updatedAt"
+        ])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.newsId is string
+        && request.resource.data.newsId.size() > 0
+        && request.resource.data.newsId.size() <= 200
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 150
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 320
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 500
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
         && (
-          request.method == 'delete'
-          || request.resource.data.userId == resource.data.userId
+          request.resource.data.parentId == null
+          || (
+            request.resource.data.parentId is string
+            && request.resource.data.parentId.size() <= 200
+          )
+        );
+
+
+      // -----------------------------------------
+      // UPDATE OWN COMMENT
+      // -----------------------------------------
+
+      allow update: if
+        isSignedIn()
+        && !isAdmin()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.newsId == resource.data.newsId
+        && request.resource.data.name == resource.data.name
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.parentId == resource.data.parentId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.keys().hasOnly([
+          "newsId",
+          "userId",
+          "name",
+          "email",
+          "text",
+          "parentId",
+          "createdAt",
+          "updatedAt"
+        ])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 500
+        && request.resource.data.updatedAt is timestamp;
+
+
+      // -----------------------------------------
+      // DELETE COMMENT
+      // -----------------------------------------
+
+      allow delete: if
+        isAdmin()
+        || (
+          isSignedIn()
+          && resource.data.userId == request.auth.uid
         );
     }
-
   }
 }
