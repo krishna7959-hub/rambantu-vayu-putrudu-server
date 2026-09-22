@@ -437,8 +437,8 @@ window.shareCurrentNews =
 
     const text =
       title +
-      "\n\nRambantu Vayu Putrudu\n" +
-      shareUrl;
+      "\n\nRambantu Vayu Putrudu";
+
 
 
     try {
@@ -558,7 +558,8 @@ window.shareCurrentNews =
                   navigator.share &&
                   navigator.canShare &&
                   navigator.canShare({
-                    files: [file]
+                    files: [file],
+                    url: shareUrl
                   })
                 ) {
 
@@ -571,6 +572,9 @@ window.shareCurrentNews =
 
                       text:
                         text,
+
+                      url:
+                        shareUrl,
 
                       files:
                         [file]
