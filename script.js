@@ -707,7 +707,10 @@ if (publishBtn) {
                       title,
 
                     message:
-                      "పూర్తి వార్త RVP Newsలో చదవండి...",
+                      details.substring(
+                        0,
+                        100
+                      ),
 
                     url:
                       "https://rambantu-vayu-putrudu.web.app"
