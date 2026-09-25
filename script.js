@@ -77,6 +77,269 @@ let editId =
 
 
 // =========================================
+// NEWS DRAFT AUTO-SAVE
+// =========================================
+
+const NEWS_DRAFT_KEY = "rvp_news_editor_draft_v1";
+
+let draftSaveTimer = null;
+
+function saveNewsDraft() {
+
+  if (editMode) {
+    return;
+  }
+
+  const titleInput =
+    document.getElementById("title");
+
+  const categoryInput =
+    document.getElementById("category");
+
+  if (
+    !titleInput ||
+    !categoryInput ||
+    !newsSections
+  ) {
+    return;
+  }
+
+  const draft = {
+    title: titleInput.value,
+    sections: getNewsSections(),
+    category: categoryInput.value,
+    savedAt: new Date().toISOString()
+  };
+
+  try {
+
+    localStorage.setItem(
+      NEWS_DRAFT_KEY,
+      JSON.stringify(draft)
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Draft Save Error:",
+      error
+    );
+
+  }
+
+}
+
+function scheduleNewsDraftSave() {
+
+  clearTimeout(
+    draftSaveTimer
+  );
+
+  draftSaveTimer =
+    setTimeout(
+      saveNewsDraft,
+      500
+    );
+
+}
+
+function restoreNewsDraft() {
+
+  if (editMode) {
+    return;
+  }
+
+  try {
+
+    const saved =
+      localStorage.getItem(
+        NEWS_DRAFT_KEY
+      );
+
+    if (!saved) {
+      return;
+    }
+
+    const draft =
+      JSON.parse(saved);
+
+    if (
+      !draft ||
+      typeof draft !== "object"
+    ) {
+      return;
+    }
+
+    const titleInput =
+      document.getElementById("title");
+
+    const categoryInput =
+      document.getElementById("category");
+
+    if (
+      !titleInput ||
+      !categoryInput ||
+      !newsSections
+    ) {
+      return;
+    }
+
+    const hasDraftContent =
+      draft.title ||
+      draft.category ||
+      (
+        Array.isArray(
+          draft.sections
+        ) &&
+        draft.sections.some(
+          section =>
+            section.subheading ||
+            section.paragraph
+        )
+      );
+
+    if (!hasDraftContent) {
+      return;
+    }
+
+    const restore =
+      confirm(
+        "📝 మీరు పూర్తి చేయని News Draft ఉంది.\n\n" +
+        "దాన్ని Restore చేయాలా?"
+      );
+
+    if (!restore) {
+
+      localStorage.removeItem(
+        NEWS_DRAFT_KEY
+      );
+
+      return;
+
+    }
+
+    titleInput.value =
+      draft.title || "";
+
+    categoryInput.value =
+      draft.category || "";
+
+    loadSectionsIntoForm(
+      Array.isArray(
+        draft.sections
+      )
+        ? draft.sections
+        : []
+    );
+
+    console.log(
+      "News draft restored"
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Draft Restore Error:",
+      error
+    );
+
+  }
+
+}
+
+function clearNewsDraft() {
+
+  clearTimeout(
+    draftSaveTimer
+  );
+
+  try {
+
+    localStorage.removeItem(
+      NEWS_DRAFT_KEY
+    );
+
+    console.log(
+      "News draft cleared"
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Draft Clear Error:",
+      error
+    );
+
+  }
+
+}
+
+const titleInputForDraft =
+  document.getElementById("title");
+
+const categoryInputForDraft =
+  document.getElementById("category");
+
+if (titleInputForDraft) {
+
+  titleInputForDraft.addEventListener(
+    "input",
+    scheduleNewsDraftSave
+  );
+
+}
+
+if (categoryInputForDraft) {
+
+  categoryInputForDraft.addEventListener(
+    "change",
+    scheduleNewsDraftSave
+  );
+
+}
+
+if (newsSections) {
+
+  newsSections.addEventListener(
+    "input",
+    scheduleNewsDraftSave
+  );
+
+  newsSections.addEventListener(
+    "change",
+    scheduleNewsDraftSave
+  );
+
+  const draftObserver =
+    new MutationObserver(
+      () => {
+        scheduleNewsDraftSave();
+      }
+    );
+
+  draftObserver.observe(
+    newsSections,
+    {
+      childList: true,
+      subtree: true
+    }
+  );
+
+}
+
+window.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    setTimeout(
+      restoreNewsDraft,
+      100
+    );
+
+  }
+);
+
+// =========================================
 // NEWS SECTIONS
 // =========================================
 
@@ -780,6 +1043,9 @@ if (publishBtn) {
 
 
         clearNewsSections();
+
+
+        clearNewsDraft();
 
 
         await loadNews();
