@@ -156,12 +156,9 @@ window.shareNews =
       );
 
       return;
-
     }
 
-
     shareWindow.document.write(`
-
       <!DOCTYPE html>
 
       <html>
@@ -431,7 +428,7 @@ function loadFeaturedNews() {
 
         <button
           class="share-news-btn"
-          onclick="shareNews(event, '${news.id}', ${JSON.stringify(news.title || "")})"
+          onclick="event.stopPropagation(); shareNews('${news.id}')"
         >
           📤 Share
         </button>
