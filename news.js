@@ -174,6 +174,221 @@ console.log("NEWS DEBUG: News ID =", id);
 
     const news =
       docSnap.data();
+    // =========================================
+    // GOOGLE ARTICLE SEO METADATA
+    // =========================================
+
+    const articleUrl =
+      window.location.origin +
+      window.location.pathname +
+      "?id=" +
+      encodeURIComponent(id);
+
+    const articleTitle =
+      news.title ||
+      "Rambantu Vayu Putrudu";
+
+    const articleDescription =
+      (
+        Array.isArray(news.sections) && news.sections.length
+          ? news.sections
+              .map(section => section.paragraph || "")
+              .join(" ")
+          : news.details || ""
+      )
+        .replace(/\s+/g, " ")
+        .trim()
+        .substring(0, 160);
+
+    const articleImage =
+      news.image ||
+      window.location.origin + "/share-image.jpg";
+
+    const articlePublished =
+      news.createdAt &&
+      news.createdAt.toDate
+        ? news.createdAt.toDate().toISOString()
+        : null;
+
+    document.title =
+      articleTitle + " | Rambantu Vayu Putrudu";
+
+    function setMeta(
+      selector,
+      attribute,
+      value
+    ) {
+      if (!value) {
+        return;
+      }
+
+      let meta =
+        document.head.querySelector(
+          selector
+        );
+
+      if (!meta) {
+        meta =
+          document.createElement("meta");
+
+        const match =
+          selector.match(
+            /(?:property|name)="([^"]+)"/
+          );
+
+        if (!match) {
+          return;
+        }
+
+        meta.setAttribute(
+          attribute,
+          match[1]
+        );
+
+        document.head.appendChild(
+          meta
+        );
+      }
+
+      meta.setAttribute(
+        "content",
+        value
+      );
+    }
+
+    setMeta(
+      'meta[property="og:title"]',
+      "property",
+      articleTitle
+    );
+
+    setMeta(
+      'meta[property="og:description"]',
+      "property",
+      articleDescription
+    );
+
+    setMeta(
+      'meta[property="og:image"]',
+      "property",
+      articleImage
+    );
+
+    setMeta(
+      'meta[property="og:url"]',
+      "property",
+      articleUrl
+    );
+
+    setMeta(
+      'meta[property="og:type"]',
+      "property",
+      "article"
+    );
+
+    setMeta(
+      'meta[name="description"]',
+      "name",
+      articleDescription
+    );
+
+    setMeta(
+      'meta[name="twitter:title"]',
+      "name",
+      articleTitle
+    );
+
+    setMeta(
+      'meta[name="twitter:description"]',
+      "name",
+      articleDescription
+    );
+
+    setMeta(
+      'meta[name="twitter:image"]',
+      "name",
+      articleImage
+    );
+
+    let canonical =
+      document.head.querySelector(
+        'link[rel="canonical"]'
+      );
+
+    if (!canonical) {
+      canonical =
+        document.createElement("link");
+
+      canonical.rel =
+        "canonical";
+
+      document.head.appendChild(
+        canonical
+      );
+    }
+
+    canonical.href =
+      articleUrl;
+
+    // =========================================
+    // GOOGLE NEWSARTICLE STRUCTURED DATA
+    // =========================================
+
+    const articleSchema = {
+      "@context": "https://schema.org",
+      "@type": "NewsArticle",
+      "headline": articleTitle,
+      "description": articleDescription,
+      "image": [
+        articleImage
+      ],
+      "datePublished": articlePublished,
+      "author": {
+        "@type": "Organization",
+        "name": "Rambantu Vayu Putrudu",
+        "url": window.location.origin + "/"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Rambantu Vayu Putrudu",
+        "url": window.location.origin + "/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": window.location.origin + "/icon-512.png"
+        }
+      },
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": articleUrl
+      }
+    };
+
+    if (
+      news.updatedAt &&
+      news.updatedAt.toDate
+    ) {
+      articleSchema.dateModified =
+        news.updatedAt
+          .toDate()
+          .toISOString();
+    }
+
+    const schemaScript =
+      document.createElement("script");
+
+    schemaScript.type =
+      "application/ld+json";
+
+    schemaScript.textContent =
+      JSON.stringify(
+        articleSchema
+      );
+
+    document.head.appendChild(
+      schemaScript
+    );
+
+
 
     const viewKey = "viewed_" + id;
 
