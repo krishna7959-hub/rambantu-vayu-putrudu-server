@@ -184,19 +184,35 @@ app.get("/sitemap.xml", async (req, res) => {
 
     console.log("Creating dynamic sitemap...");
 
-    const response = await fetch(firestoreURL);
+    let pageToken = "";
+    const documents = [];
 
-    if (!response.ok) {
+    do {
 
-      throw new Error(
-        `Firestore request failed: ${response.status}`
-      );
+      const url =
+        pageToken
+          ? `${firestoreURL}&pageToken=${encodeURIComponent(pageToken)}`
+          : firestoreURL;
 
-    }
+      const response = await fetch(url);
 
-    const data = await response.json();
+      if (!response.ok) {
 
-    const documents = data.documents || [];
+        throw new Error(
+          `Firestore request failed: ${response.status}`
+        );
+
+      }
+
+      const data = await response.json();
+
+      if (data.documents) {
+        documents.push(...data.documents);
+      }
+
+      pageToken = data.nextPageToken || "";
+
+    } while (pageToken);
 
     const siteURL =
       "https://rambantu-vayu-putrudu.web.app";
