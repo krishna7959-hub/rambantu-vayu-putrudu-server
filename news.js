@@ -143,6 +143,22 @@ onAuthStateChanged(
 // LOAD NEWS
 // =========================================
 
+function loadAdSenseForArticle() {
+
+  if (document.querySelector('script[src*="adsbygoogle.js"]')) {
+    return;
+  }
+
+  const script = document.createElement("script");
+
+  script.async = true;
+  script.src =
+    "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7393218704016518";
+  script.crossOrigin = "anonymous";
+
+  document.head.appendChild(script);
+}
+
 async function loadNews() {
 console.log("NEWS DEBUG: loadNews started");
 console.log("NEWS DEBUG: News ID =", id);
@@ -611,6 +627,8 @@ console.log("NEWS DEBUG: News ID =", id);
     await loadComments(id);
 
     await loadRelatedNews(id);
+
+    loadAdSenseForArticle();
 
   }
 
