@@ -769,6 +769,7 @@ window.onscroll =
     }
 
     if (
+      window.scrollY > 300 ||
       document.body.scrollTop > 300 ||
       document.documentElement.scrollTop > 300
     ) {
