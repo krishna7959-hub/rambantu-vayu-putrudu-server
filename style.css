@@ -658,45 +658,45 @@ nav a:hover {
 }
 
 /* =========================================
-   TOP BUTTON
+   SCROLL NAVIGATION BUTTONS
 ========================================= */
 
 #topBtn,
 #bottomBtn {
     display: none;
     position: fixed;
-    bottom: 20px;
+    right: 20px;
     z-index: 999;
-    width: 48px;
-    height: 48px;
-    border: none;
+    width: 46px;
+    height: 46px;
+    border: 1px solid rgba(255,255,255,.45);
     outline: none;
-    background: linear-gradient(145deg, #e00000, #a80000);
+    background: linear-gradient(145deg, #ff1a1a, #b00000);
     color: #fff;
     cursor: pointer;
     border-radius: 50%;
     font-size: 21px;
-    font-weight: bold;
-    line-height: 48px;
+    font-weight: 700;
+    line-height: 46px;
     text-align: center;
     padding: 0;
-    box-shadow: 0 5px 14px rgba(0,0,0,.28), inset 0 1px 2px rgba(255,255,255,.25);
-    transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    box-shadow: 0 6px 16px rgba(0,0,0,.30), inset 0 1px 3px rgba(255,255,255,.35);
+    transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
 }
 
 #topBtn {
-    right: 20px;
+    bottom: 20px;
 }
 
 #bottomBtn {
-    right: 78px;
+    bottom: 74px;
 }
 
 #topBtn:hover,
 #bottomBtn:hover {
-    background: linear-gradient(145deg, #f00000, #900000);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 18px rgba(0,0,0,.35), inset 0 1px 2px rgba(255,255,255,.3);
+    filter: brightness(1.08);
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 9px 20px rgba(0,0,0,.38), inset 0 1px 3px rgba(255,255,255,.4);
 }
 
 #topBtn:active,
