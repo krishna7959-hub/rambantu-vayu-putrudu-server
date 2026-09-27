@@ -661,25 +661,47 @@ nav a:hover {
    TOP BUTTON
 ========================================= */
 
-#topBtn {
+#topBtn,
+#bottomBtn {
     display: none;
     position: fixed;
     bottom: 20px;
-    right: 20px;
     z-index: 999;
+    width: 48px;
+    height: 48px;
     border: none;
     outline: none;
-    background: #c40000;
+    background: linear-gradient(145deg, #e00000, #a80000);
     color: #fff;
     cursor: pointer;
-    padding: 14px 16px;
     border-radius: 50%;
-    font-size: 18px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, .3);
+    font-size: 21px;
+    font-weight: bold;
+    line-height: 48px;
+    text-align: center;
+    padding: 0;
+    box-shadow: 0 5px 14px rgba(0,0,0,.28), inset 0 1px 2px rgba(255,255,255,.25);
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
 }
 
-#topBtn:hover {
-    background: #900;
+#topBtn {
+    right: 20px;
+}
+
+#bottomBtn {
+    right: 78px;
+}
+
+#topBtn:hover,
+#bottomBtn:hover {
+    background: linear-gradient(145deg, #f00000, #900000);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(0,0,0,.35), inset 0 1px 2px rgba(255,255,255,.3);
+}
+
+#topBtn:active,
+#bottomBtn:active {
+    transform: scale(.92);
 }
 
 /* =========================================

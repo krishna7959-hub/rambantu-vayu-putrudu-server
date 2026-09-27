@@ -755,14 +755,18 @@ const topBtn =
     "topBtn"
   );
 
+const bottomBtn =
+  document.getElementById(
+    "bottomBtn"
+  );
+
 
 window.onscroll =
   function () {
 
-    if (!topBtn) {
+    if (!topBtn || !bottomBtn) {
       return;
     }
-
 
     if (
       document.body.scrollTop > 300 ||
@@ -772,14 +776,21 @@ window.onscroll =
       topBtn.style.display =
         "block";
 
+      bottomBtn.style.display =
+        "block";
+
     } else {
 
       topBtn.style.display =
         "none";
 
+      bottomBtn.style.display =
+        "none";
+
     }
 
   };
+
 
 
 window.topFunction =
@@ -788,6 +799,20 @@ window.topFunction =
     window.scrollTo({
 
       top: 0,
+
+      behavior: "smooth"
+
+    });
+
+  };
+
+
+window.bottomFunction =
+  function () {
+
+    window.scrollTo({
+
+      top: document.documentElement.scrollHeight,
 
       behavior: "smooth"
 
