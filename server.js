@@ -402,6 +402,110 @@ app.post("/view", async (req, res) => {
    SERVER
 ========================================= */
 
+/* =========================================
+   NEWS LIKES
+========================================= */
+
+const likeAttempts = new Map();
+
+function rateLimitLike(ip) {
+  const now = Date.now();
+  const windowMs = 60 * 1000;
+  const maxAttempts = 20;
+
+  const entry = likeAttempts.get(ip) || { start: now, count: 0 };
+
+  if (now - entry.start >= windowMs) {
+    entry.start = now;
+    entry.count = 0;
+  }
+
+  entry.count += 1;
+  likeAttempts.set(ip, entry);
+
+  return entry.count <= maxAttempts;
+}
+
+app.post("/like", async (req, res) => {
+
+  if (!rateLimitLike(req.ip)) {
+    return res.status(429).json({
+      success: false,
+      message: "Too many like requests"
+    });
+  }
+
+  try {
+
+    const newsId = req.body.newsId;
+    const action = req.body.action;
+
+    if (
+      !newsId ||
+      typeof newsId !== "string" ||
+      newsId.length > 200 ||
+      newsId.includes("/") ||
+      newsId.includes("\\")
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid newsId"
+      });
+    }
+
+    if (action !== "like" && action !== "unlike") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid like action"
+      });
+    }
+
+    const newsRef = getFirestore()
+      .collection("news")
+      .doc(newsId);
+
+    const newsSnap = await newsRef.get();
+
+    if (!newsSnap.exists) {
+      return res.status(404).json({
+        success: false,
+        message: "News not found"
+      });
+    }
+
+    const currentLikes =
+      typeof newsSnap.data().likes === "number"
+        ? newsSnap.data().likes
+        : 0;
+
+    const newLikes =
+      action === "like"
+        ? currentLikes + 1
+        : Math.max(0, currentLikes - 1);
+
+    await newsRef.update({
+      likes: newLikes
+    });
+
+    res.json({
+      success: true,
+      likes: newLikes
+    });
+
+  } catch (error) {
+
+    console.error("Like Counter Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Like count update failed"
+    });
+
+  }
+
+});
+
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {

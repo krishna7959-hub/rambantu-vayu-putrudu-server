@@ -521,6 +521,18 @@ console.log("NEWS DEBUG: News ID =", id);
         <br><br>
 
 
+        <!-- LIKE -->
+
+        <button
+          id="newsLikeBtn"
+          class="like-btn"
+          type="button">
+
+          ❤️ Like <span id="newsLikeCount">0</span>
+
+        </button>
+
+
         <!-- SHARE -->
 
         <button
@@ -617,6 +629,36 @@ console.log("NEWS DEBUG: News ID =", id);
 
 
     window.currentNews = news;
+    const likeButton =
+      document.getElementById("newsLikeBtn");
+
+    const likeCount =
+      document.getElementById("newsLikeCount");
+
+    if (likeButton && likeCount) {
+
+      const liked =
+        localStorage.getItem(
+          "rvp_news_liked_" + id
+        ) === "true";
+
+      const currentLikes =
+        typeof news.likes === "number"
+          ? news.likes
+          : 0;
+
+      likeCount.textContent =
+        currentLikes;
+
+      likeButton.innerHTML =
+        liked
+          ? '❤️ Liked <span id="newsLikeCount">' + currentLikes + '</span>'
+          : '🤍 Like <span id="newsLikeCount">' + currentLikes + '</span>';
+
+      likeButton.onclick =
+        updateNewsLike;
+
+    }
 
 
     updateCommentUI(
@@ -648,6 +690,74 @@ console.log("NEWS DEBUG: News ID =", id);
 
 
 // =========================================
+// =========================================
+// NEWS LIKE
+// =========================================
+
+async function updateNewsLike() {
+
+  const button = document.getElementById("newsLikeBtn");
+  const countElement = document.getElementById("newsLikeCount");
+
+  if (!button || !countElement || !window.currentNews) {
+    return;
+  }
+
+  const newsId = window.currentNews.id;
+  const storageKey = "rvp_news_liked_" + newsId;
+
+  let liked = localStorage.getItem(storageKey) === "true";
+
+  try {
+
+    const response = await fetch(
+      "https://rambantu-vayu-putrudu-server.onrender.com/like",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          newsId: newsId,
+          action: liked ? "unlike" : "like"
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Like update failed"
+      );
+    }
+
+    liked = !liked;
+
+    if (liked) {
+      localStorage.setItem(storageKey, "true");
+    } else {
+      localStorage.removeItem(storageKey);
+    }
+
+    countElement.textContent = data.likes;
+
+    button.innerHTML =
+      liked
+        ? '❤️ Liked <span id="newsLikeCount">' + data.likes + '</span>'
+        : '🤍 Like <span id="newsLikeCount">' + data.likes + '</span>';
+
+  } catch (error) {
+
+    console.error(
+      "Like Error:",
+      error
+    );
+
+  }
+
+}
+
 // SHARE CURRENT NEWS
 // =========================================
 
