@@ -544,6 +544,15 @@ console.log("NEWS DEBUG: News ID =", id);
         </button>
 
 
+        <button
+          class="copy-link-btn"
+          type="button"
+          onclick="copyCurrentNewsLink()">
+
+          🔗 Copy Link
+
+        </button>
+
         <hr>
 
 
@@ -757,6 +766,37 @@ async function updateNewsLike() {
   }
 
 }
+
+// COPY CURRENT NEWS LINK
+// =========================================
+window.copyCurrentNewsLink =
+  async function () {
+
+    const shareUrl =
+      window.location.href;
+
+    try {
+
+      await navigator.clipboard.writeText(
+        shareUrl
+      );
+
+      alert("🔗 News link copied successfully!");
+
+    } catch (error) {
+
+      console.error(
+        "Copy Link Error:",
+        error
+      );
+
+      alert(
+        "Link copy కాలేదు. మళ్లీ ప్రయత్నించండి."
+      );
+
+    }
+
+  };
 
 // SHARE CURRENT NEWS
 // =========================================
