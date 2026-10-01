@@ -5,6 +5,11 @@ on:
     branches:
       - main
 
+  schedule:
+    - cron: "17 * * * *"
+
+  workflow_dispatch:
+
 permissions:
   contents: read
 
@@ -16,10 +21,44 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare latest sitemap
+        run: |
+          curl --fail --silent --show-error --location --max-time 60 \
+            https://rambantu-vayu-putrudu-server.onrender.com/sitemap.xml \
+            -o sitemap.xml.new
+
+          python - <<'PY'
+          import xml.etree.ElementTree as ET
+          ET.parse("sitemap.xml.new")
+          print("SITEMAP XML OK")
+          PY
+
+      - name: Check sitemap against live Firebase
+        if: github.event_name == 'schedule'
+        run: |
+          curl --fail --silent --show-error --location --max-time 60 \
+            https://rambantu-vayu-putrudu.web.app/sitemap.xml \
+            -o sitemap-live.xml
+
+          if cmp -s sitemap-live.xml sitemap.xml.new; then
+            echo "Sitemap unchanged. No deployment needed."
+            echo "DEPLOY=false" >> "$GITHUB_ENV"
+          else
+            echo "Sitemap changed. Deployment required."
+            mv sitemap.xml.new sitemap.xml
+            echo "DEPLOY=true" >> "$GITHUB_ENV"
+          fi
+
+      - name: Use latest sitemap for push or manual run
+        if: github.event_name != 'schedule'
+        run: |
+          mv sitemap.xml.new sitemap.xml
+          echo "DEPLOY=true" >> "$GITHUB_ENV"
+
       - name: Deploy to Firebase Hosting
+        if: env.DEPLOY == 'true'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_RAMBANTU_VAYU_PUTRUDU }}
           projectId: rambantu-vayu-putrudu
           channelId: live
-
