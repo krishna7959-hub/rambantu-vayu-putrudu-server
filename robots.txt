@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://rambantu-vayu-putrudu.web.app/sitemap.xml
+Sitemap: https://rambantu-vayu-putrudu-server.onrender.com/sitemap.xml
