@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rambantu-vayu-putrudu.web.app/sitemap.xml
