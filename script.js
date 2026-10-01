@@ -414,6 +414,165 @@ function addNewsSection(
 
 
 // =========================================
+// PASTE NEWS
+// =========================================
+
+const pasteNewsBtn =
+  document.getElementById(
+    "pasteNewsBtn"
+  );
+
+
+function parsePastedNews(text) {
+
+  const cleanText =
+    text
+      .replace(/\r/g, "")
+      .trim();
+
+
+  const titleMatch =
+    cleanText.match(
+      /(?:^|\n)TITLE\s*:\s*([\s\S]*?)(?=\n\s*SUBHEADING\s*:|\n\s*PARAGRAPH\s*:|$)/i
+    );
+
+
+  const title =
+    titleMatch
+      ? titleMatch[1].trim()
+      : "";
+
+
+  const sectionPattern =
+    /SUBHEADING\s*:\s*([\s\S]*?)\n\s*PARAGRAPH\s*:\s*([\s\S]*?)(?=\n\s*SUBHEADING\s*:|$)/gi;
+
+
+  const sections = [];
+
+
+  let match;
+
+
+  while (
+    (match = sectionPattern.exec(cleanText)) !== null
+  ) {
+
+    const subheading =
+      match[1].trim();
+
+
+    const paragraph =
+      match[2].trim();
+
+
+    if (paragraph) {
+
+      sections.push({
+        subheading,
+        paragraph
+      });
+
+    }
+
+  }
+
+
+  return {
+    title,
+    sections
+  };
+
+}
+
+
+if (pasteNewsBtn) {
+
+  pasteNewsBtn.addEventListener(
+    "click",
+    async () => {
+
+      try {
+
+        const text =
+          await navigator.clipboard.readText();
+
+
+        if (!text.trim()) {
+
+          alert(
+            "Clipboardలో News text లేదు. ముందుగా Newsని Copy చేయండి."
+          );
+
+          return;
+
+        }
+
+
+        const parsed =
+          parsePastedNews(text);
+
+
+        if (
+          !parsed.title ||
+          !parsed.sections.length
+        ) {
+
+          alert(
+            "News format గుర్తించలేకపోయాను. TITLE, SUBHEADING, PARAGRAPH formatలో Copy చేయండి."
+          );
+
+          return;
+
+        }
+
+
+        document
+          .getElementById("title")
+          .value = parsed.title;
+
+
+        newsSections.innerHTML = "";
+
+
+        parsed.sections.forEach(
+          section => {
+
+            addNewsSection(
+              section.subheading,
+              section.paragraph
+            );
+
+          }
+        );
+
+
+        alert(
+          "📋 News మొత్తం Formలో సెట్ అయింది."
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "Paste News Error:",
+          error
+        );
+
+
+        alert(
+          "Clipboard చదవలేకపోయాను. Browser permission ఇవ్వండి."
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+// =========================================
 // GET NEWS SECTIONS
 // =========================================
 

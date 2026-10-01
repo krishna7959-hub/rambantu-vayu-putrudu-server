@@ -45,6 +45,7 @@
 
 <button
   id="commentsShortcut"
+  style="width:250px;display:inline-block;padding:10px 18px;font-size:16px;border-radius:20px;box-sizing:border-box;"
   onclick="
     document
       .getElementById('commentsSection')
@@ -64,6 +65,13 @@
   id="title"
   placeholder="News Title"
 >
+
+<button
+  type="button"
+  id="pasteNewsBtn"
+>
+  📋 Paste News
+</button>
 
 
 <!-- NEWS CONTENT -->
@@ -116,6 +124,10 @@
   <option value="Health">Health</option>
   <option value="Crime">Crime</option>
   <option value="Lifestyle">Lifestyle</option>
+  <option value="Andhra Pradesh">Andhra Pradesh</option>
+  <option value="Telangana">Telangana</option>
+  <option value="Political Analysis">Political Analysis</option>
+  <option value="RVP News Analysis">RVP News Analysis</option>
 
 </select>
 
@@ -179,6 +191,9 @@
     </p>
 
   </div>
+
+  <button type="button" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" style="position:fixed;top:72px;right:12px;z-index:9998;padding:10px 18px;border:none;border-radius:20px;cursor:pointer;font-weight:600;font-size:16px;width:250px;box-sizing:border-box;background:#1565c0;color:white;">⬆️ పైకి</button>
+
 
 </div>
 
