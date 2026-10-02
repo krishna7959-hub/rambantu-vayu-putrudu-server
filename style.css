@@ -747,7 +747,7 @@ nav a:hover {
     }
 
     .news-card img {
-        height: 180px;
+        height: auto;
     }
 
     #newsContainer {
@@ -812,7 +812,7 @@ nav a:hover {
 }
 /* Trending image full view override */
 .trending-card img {
-    height: 180px;
+    height: auto;
     object-fit: contain !important;
     background: #f2f2f2;
 }
