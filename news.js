@@ -19,6 +19,7 @@ import {
   where,
   serverTimestamp,
   updateDoc,
+  increment,
   deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -190,6 +191,13 @@ console.log("NEWS DEBUG: News ID =", id);
 
     const news =
       docSnap.data();
+
+    await updateDoc(
+      docRef,
+      {
+        views: increment(1)
+      }
+    );
     // =========================================
     // GOOGLE ARTICLE SEO METADATA
     // =========================================

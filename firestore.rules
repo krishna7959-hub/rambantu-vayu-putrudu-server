@@ -25,8 +25,20 @@ service cloud.firestore {
       // Public can read news
       allow read: if true;
 
-      // Only Admin can create/update/delete news
-      allow create, update, delete: if isAdmin();
+      // Only Admin can create/delete news and update normal news fields
+      allow create, delete: if isAdmin();
+
+      // Public view counter: only the views field may increase by exactly 1
+      allow update: if
+        isAdmin()
+        || (
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['views'])
+          && request.resource.data.get('views', 0) ==
+             resource.data.get('views', 0) + 1
+          && resource.data.get('views', 0) is int
+          && request.resource.data.get('views', 0) is int
+        );
     }
 
 
