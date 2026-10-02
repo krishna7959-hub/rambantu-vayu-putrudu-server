@@ -233,6 +233,31 @@ a {
     transform: translateY(-5px);
 }
 
+/* =========================================
+   TRENDING NEWS SLIDER
+========================================= */
+
+.trending-card {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.trending-card img {
+    height: 180px;
+    object-fit: contain;
+    background: #f2f2f2;
+}
+
+.trending-card .news-content {
+    padding: 10px 15px;
+}
+
+.trending-card .news-content h3 {
+    font-size: 18px;
+    line-height: 1.35;
+    margin-bottom: 0;
+}
+
 .news-card img {
     width: 100%;
     height: 200px;
@@ -785,3 +810,10 @@ nav a:hover {
     }
 
 }
+/* Trending image full view override */
+.trending-card img {
+    height: 180px;
+    object-fit: contain !important;
+    background: #f2f2f2;
+}
+

@@ -46,6 +46,8 @@ async function loadNews() {
 
     loadFeaturedNews();
 
+    loadTrendingNews();
+
     displayNews(allNews);
 
     loadBreakingNews();
@@ -444,6 +446,88 @@ function loadFeaturedNews() {
 
 // =========================================
 // Display News
+// =========================================
+
+function loadTrendingNews() {
+
+  const container =
+    document.getElementById("trendingContainer");
+
+  if (container === null) {
+    return;
+  }
+
+  const trendingNews =
+    [...allNews]
+      .filter(news => Number.isInteger(news.views) && news.views > 0)
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 5);
+
+  if (trendingNews.length === 0) {
+    container.innerHTML = "";
+    return;
+  }
+
+  let currentIndex = 0;
+
+  function showTrendingNews() {
+
+    const news = trendingNews[currentIndex];
+
+    container.innerHTML = `
+
+      <div
+        class="news-card trending-card"
+        onclick="location.href='news.html?id=${news.id}'"
+      >
+
+        <img
+          src="${news.image || ""}"
+          alt=""
+        >
+
+        <div class="news-content">
+
+          <span class="category-badge">
+            ${news.category || "News"}
+          </span>
+
+          <h3>
+            ${news.title || ""}
+          </h3>
+
+        </div>
+
+      </div>
+
+    `;
+
+  }
+
+  showTrendingNews();
+
+  if (trendingNews.length > 1) {
+
+    setInterval(() => {
+
+      currentIndex =
+        (currentIndex + 1) % trendingNews.length;
+
+      showTrendingNews();
+
+    }, 4000);
+
+  }
+
+}
+
+
+// =========================================
+// Latest News Display
+// =========================================
+
+// =========================================
+// Latest News Display
 // =========================================
 
 function displayNews(newsList) {
