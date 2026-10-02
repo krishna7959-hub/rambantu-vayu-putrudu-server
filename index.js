@@ -784,22 +784,39 @@ window.searchNews =
             let newsDate = null;
 
             if (
-              news.createdAt.toDate
+              news.createdAt &&
+              typeof news.createdAt.toDate === "function"
             ) {
               newsDate =
                 news.createdAt.toDate();
+
             } else if (
-              news.createdAt.seconds
+              news.createdAt &&
+              typeof news.createdAt.seconds === "number"
             ) {
               newsDate =
                 new Date(
                   news.createdAt.seconds * 1000
                 );
+
             } else if (
               news.createdAt instanceof Date
             ) {
               newsDate =
                 news.createdAt;
+
+            } else if (
+              typeof news.createdAt === "string"
+            ) {
+              newsDate =
+                new Date(news.createdAt);
+            }
+
+            if (
+              newsDate == null ||
+              isNaN(newsDate.getTime())
+            ) {
+              matchesDate = false;
             }
 
             if (newsDate) {
