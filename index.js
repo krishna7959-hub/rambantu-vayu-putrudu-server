@@ -712,32 +712,144 @@ window.searchNews =
         "searchInput"
       );
 
+    const categorySelect =
+      document.getElementById(
+        "searchCategory"
+      );
+
+    const dateSelect =
+      document.getElementById(
+        "searchDate"
+      );
+
     if (!input) {
       return;
     }
-
 
     const keyword =
       input.value
         .toLowerCase()
         .trim();
 
+    const selectedCategory =
+      categorySelect
+        ? categorySelect.value
+        : "All";
 
-    const filtered =
-      allNews.filter(
-        (news) =>
+    const selectedDate =
+      dateSelect
+        ? dateSelect.value
+        : "all";
 
-          (news.title || "")
-            .toLowerCase()
-            .includes(keyword)
+    const now =
+      new Date();
 
-          ||
-
-          (news.details || "")
-            .toLowerCase()
-            .includes(keyword)
+    const todayStart =
+      new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
       );
 
+    let filtered =
+      allNews.filter(
+        (news) => {
+
+          const title =
+            (news.title || "")
+              .toLowerCase();
+
+          const details =
+            (news.details || "")
+              .toLowerCase();
+
+          const matchesKeyword =
+            !keyword ||
+            title.includes(keyword) ||
+            details.includes(keyword);
+
+          const matchesCategory =
+            selectedCategory === "All" ||
+            (news.category || "")
+              .toLowerCase() ===
+            selectedCategory.toLowerCase();
+
+          let matchesDate = true;
+
+          if (
+            selectedDate !== "all" &&
+            news.createdAt
+          ) {
+
+            let newsDate = null;
+
+            if (
+              news.createdAt.toDate
+            ) {
+              newsDate =
+                news.createdAt.toDate();
+            } else if (
+              news.createdAt.seconds
+            ) {
+              newsDate =
+                new Date(
+                  news.createdAt.seconds * 1000
+                );
+            } else if (
+              news.createdAt instanceof Date
+            ) {
+              newsDate =
+                news.createdAt;
+            }
+
+            if (newsDate) {
+
+              if (
+                selectedDate === "today"
+              ) {
+
+                matchesDate =
+                  newsDate >=
+                  todayStart;
+
+              } else if (
+                selectedDate === "7days"
+              ) {
+
+                const cutoff =
+                  new Date(now);
+
+                cutoff.setDate(
+                  cutoff.getDate() - 7
+                );
+
+                matchesDate =
+                  newsDate >= cutoff;
+
+              } else if (
+                selectedDate === "30days"
+              ) {
+
+                const cutoff =
+                  new Date(now);
+
+                cutoff.setDate(
+                  cutoff.getDate() - 30
+                );
+
+                matchesDate =
+                  newsDate >= cutoff;
+              }
+            }
+          }
+
+          return (
+            matchesKeyword &&
+            matchesCategory &&
+            matchesDate
+          );
+        }
+      );
 
     displayNews(
       filtered

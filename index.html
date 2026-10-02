@@ -46,6 +46,35 @@
       placeholder="Search News..."
       onkeyup="searchNews()">
 
+    <select id="searchCategory" onchange="searchNews()">
+      <option value="All">All Categories</option>
+      <option value="Politics">Politics</option>
+      <option value="Devotional">Devotional</option>
+      <option value="Sports">Sports</option>
+      <option value="Cinema">Cinema</option>
+      <option value="Business">Business</option>
+      <option value="Technology">Technology</option>
+      <option value="National">National</option>
+      <option value="International">International</option>
+      <option value="Education">Education</option>
+      <option value="Weather">Weather</option>
+      <option value="Jobs">Jobs</option>
+      <option value="Health">Health</option>
+      <option value="Crime">Crime</option>
+      <option value="Lifestyle">Lifestyle</option>
+      <option value="Andhra Pradesh">Andhra Pradesh</option>
+      <option value="Telangana">Telangana</option>
+      <option value="Political Analysis">Political Analysis</option>
+      <option value="RVP News Analysis">RVP News Analysis</option>
+    </select>
+
+    <select id="searchDate" onchange="searchNews()">
+      <option value="all">Any Time</option>
+      <option value="today">Today</option>
+      <option value="7days">Last 7 Days</option>
+      <option value="30days">Last 30 Days</option>
+    </select>
+
   </div>
 
 </header>
