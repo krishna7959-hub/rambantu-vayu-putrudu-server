@@ -3,6 +3,10 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
+  getAnalytics
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+
+import {
   initializeFirestore
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -22,12 +26,15 @@ const firebaseConfig = {
   projectId: "rambantu-vayu-putrudu",
   storageBucket: "rambantu-vayu-putrudu.firebasestorage.app",
   messagingSenderId: "285095305794",
-  appId: "1:285095305794:web:dddf323e583c21ced303db"
+  appId: "1:285095305794:web:dddf323e583c21ced303db",
+  measurementId: "G-D713HTPXQ5"
 };
 
 
 const app =
   initializeApp(firebaseConfig);
+
+export const analytics = getAnalytics(app);
 
 
 // =========================================
