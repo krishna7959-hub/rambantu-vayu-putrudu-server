@@ -470,37 +470,65 @@ function loadTrendingNews() {
 
   let currentIndex = 0;
 
-  function showTrendingNews() {
+  function createTrendingCard(news, extraClass = "") {
 
-    const news = trendingNews[currentIndex];
+    const card = document.createElement("div");
 
-    container.innerHTML = `
+    card.className =
+      `news-card trending-card ${extraClass}`.trim();
 
-      <div
-        class="news-card trending-card"
-        onclick="location.href='news.html?id=${news.id}'"
+    card.onclick = () => {
+      location.href = `news.html?id=${news.id}`;
+    };
+
+    card.innerHTML = `
+
+      <img
+        src="${news.image || ""}"
+        alt=""
       >
 
-        <img
-          src="${news.image || ""}"
-          alt=""
-        >
+      <div class="news-content">
 
-        <div class="news-content">
+        <span class="category-badge">
+          ${news.category || "News"}
+        </span>
 
-          <span class="category-badge">
-            ${news.category || "News"}
-          </span>
-
-          <h3>
-            ${news.title || ""}
-          </h3>
-
-        </div>
+        <h3>
+          ${news.title || ""}
+        </h3>
 
       </div>
 
     `;
+
+    return card;
+  }
+
+
+  function showTrendingNews() {
+
+    const news = trendingNews[currentIndex];
+
+    const oldCard =
+      container.querySelector(".trending-card");
+
+    const newCard =
+      createTrendingCard(news, "trending-enter");
+
+    container.appendChild(newCard);
+
+    if (oldCard) {
+
+      oldCard.classList.add("trending-exit");
+
+      setTimeout(() => {
+
+        oldCard.remove();
+
+      }, 600);
+
+    }
 
   }
 

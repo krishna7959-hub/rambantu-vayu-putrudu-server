@@ -817,3 +817,53 @@ nav a:hover {
     background: #f2f2f2;
 }
 
+
+
+/* Trending carousel layout */
+#trendingContainer {
+    display: grid;
+    overflow: hidden;
+}
+
+.trending-card {
+    grid-area: 1 / 1;
+    width: 100%;
+    animation: none;
+}
+
+.trending-card.trending-enter {
+    animation: trendingEnter 0.6s ease forwards;
+}
+
+.trending-card.trending-exit {
+    animation: trendingExit 0.6s ease forwards;
+}
+
+@keyframes trendingEnter {
+    from {
+        transform: translateX(100%);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+
+/* Smooth Trending card exit */
+@keyframes trendingExit {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(-80%);
+        opacity: 0;
+    }
+}
+
+.trending-card.trending-exit {
+    animation: trendingExit 0.6s ease-in-out forwards;
+}
+
