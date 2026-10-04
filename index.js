@@ -710,6 +710,7 @@ async function loadBreakingNews() {
     return;
   }
 
+  let manualBreaking = "";
 
   try {
 
@@ -722,25 +723,17 @@ async function loadBreakingNews() {
         )
       );
 
-
-    if (
-      breakingDoc.exists()
-    ) {
+    if (breakingDoc.exists()) {
 
       const data =
         breakingDoc.data();
-
 
       if (
         data.text &&
         data.text.trim() !== ""
       ) {
-
-        breakingElement.innerHTML =
-          "🚨 " + data.text;
-
-        return;
-
+        manualBreaking =
+          data.text.trim();
       }
 
     }
@@ -754,26 +747,77 @@ async function loadBreakingNews() {
 
   }
 
-
   // =======================================
-  // If no Breaking News,
-  // show Latest News
+  // Manual Breaking + Latest 5 News
   // =======================================
 
-  const breaking =
-    allNews
-      .slice(0, 10)
-      .map(
-        (news) =>
-          "🔴 " + news.title
-      )
-      .join(
-        " &nbsp;&nbsp;&nbsp;&nbsp; "
+  breakingElement.innerHTML = "";
+
+  const items = [];
+
+  // Manual Breaking News
+  if (manualBreaking) {
+
+    const manualItem =
+      document.createElement("span");
+
+    manualItem.textContent =
+      "🚨 " + manualBreaking;
+
+    items.push(manualItem);
+
+  }
+
+  // Latest 5 News
+  const latestNews =
+    allNews.slice(0, 5);
+
+  latestNews.forEach((news) => {
+
+    const newsLink =
+      document.createElement("a");
+
+    newsLink.href =
+      "news.html?id=" +
+      encodeURIComponent(news.id);
+
+    newsLink.textContent =
+      "🔴 " +
+      (news.title || "Latest News");
+
+    newsLink.style.color =
+      "inherit";
+
+    newsLink.style.textDecoration =
+      "none";
+
+    items.push(newsLink);
+
+  });
+
+  // =======================================
+  // Add all items to ticker
+  // =======================================
+
+  items.forEach((item, index) => {
+
+    if (index > 0) {
+
+      const separator =
+        document.createElement("span");
+
+      separator.innerHTML =
+        "&nbsp;&nbsp;&nbsp;&nbsp;";
+
+      breakingElement.appendChild(
+        separator
       );
 
+    }
 
-  breakingElement.innerHTML =
-    breaking;
+    breakingElement.appendChild(item);
+
+  });
 
 }
 
