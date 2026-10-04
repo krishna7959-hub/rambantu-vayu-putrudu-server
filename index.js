@@ -14,6 +14,81 @@ let allNews = [];
 
 
 // =========================================
+// Saved News
+// =========================================
+
+const SAVED_NEWS_KEY = "rvp_saved_news";
+
+function getSavedNewsIds() {
+
+  try {
+
+    return JSON.parse(
+      localStorage.getItem(SAVED_NEWS_KEY)
+    ) || [];
+
+  } catch (error) {
+
+    console.error(
+      "Saved News Error:",
+      error
+    );
+
+    return [];
+
+  }
+
+}
+
+function isNewsSaved(newsId) {
+
+  return getSavedNewsIds().includes(newsId);
+
+}
+
+window.toggleSaveNews = function(event, newsId) {
+
+  event.stopPropagation();
+
+  const savedNewsIds =
+    getSavedNewsIds();
+
+  const index =
+    savedNewsIds.indexOf(newsId);
+
+  if (index === -1) {
+
+    savedNewsIds.push(newsId);
+
+  } else {
+
+    savedNewsIds.splice(index, 1);
+
+  }
+
+  localStorage.setItem(
+    SAVED_NEWS_KEY,
+    JSON.stringify(savedNewsIds)
+  );
+
+  const button =
+    event.currentTarget;
+
+  const saved =
+    index === -1;
+
+  button.textContent =
+    saved ? "🔖 Saved" : "🔖 Save";
+
+  button.classList.toggle(
+    "saved",
+    saved
+  );
+
+};
+
+
+// =========================================
 // Load News
 // =========================================
 
@@ -602,6 +677,13 @@ function displayNews(newsList) {
             onclick="event.stopPropagation(); shareNews('${news.id}')"
           >
             📤 Share
+          </button>
+          <button
+            type="button"
+            class="save-btn${isNewsSaved(news.id) ? " saved" : ""}"
+            onclick="toggleSaveNews(event, '${news.id}')"
+          >
+            ${isNewsSaved(news.id) ? "🔖 Saved" : "🔖 Save"}
           </button>
 
         </div>
