@@ -594,15 +594,7 @@ nav a:hover {
 }
 
 .save-btn {
-    margin: 0 6px 20px 0 !important;
-    padding: 12px 22px !important;
-    border: none !important;
-    border-radius: 8px !important;
     background: #555 !important;
-    color: #fff !important;
-    font-size: 16px !important;
-    cursor: pointer;
-    display: inline-block;
 }
 
 .save-btn.saved {
