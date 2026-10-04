@@ -1363,3 +1363,54 @@ window.bottomFunction =
 // =========================================
 
 loadNews();
+/* =========================================
+   DARK MODE
+========================================= */
+
+const DARK_MODE_KEY = "rvp_dark_mode";
+
+function applyDarkMode(enabled) {
+  document.body.classList.toggle("dark-mode", enabled);
+
+  const button =
+    document.getElementById("darkModeButton");
+
+  if (button) {
+    button.textContent = enabled ? "☀️" : "🌙";
+    button.setAttribute(
+      "aria-label",
+      enabled ? "Switch to Light Mode" : "Switch to Dark Mode"
+    );
+    button.title =
+      enabled ? "Light Mode" : "Dark Mode";
+  }
+}
+
+function initDarkMode() {
+  const savedMode =
+    localStorage.getItem(DARK_MODE_KEY) === "true";
+
+  applyDarkMode(savedMode);
+
+  const button =
+    document.getElementById("darkModeButton");
+
+  if (!button) {
+    return;
+  }
+
+  button.addEventListener("click", function () {
+    const enabled =
+      !document.body.classList.contains("dark-mode");
+
+    localStorage.setItem(
+      DARK_MODE_KEY,
+      String(enabled)
+    );
+
+    applyDarkMode(enabled);
+  });
+}
+
+initDarkMode();
+
