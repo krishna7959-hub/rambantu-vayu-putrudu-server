@@ -1024,3 +1024,20 @@ body.dark-mode #darkModeButton {
     color: #222;
 }
 
+
+/* =========================================
+   DARK MODE - WELCOME / HERO
+========================================= */
+
+body.dark-mode .hero {
+    background: #1e1e1e;
+    color: #f1f1f1;
+}
+
+body.dark-mode .hero h1,
+body.dark-mode .hero h2,
+body.dark-mode .hero h3,
+body.dark-mode .hero p {
+    color: #f1f1f1;
+}
+

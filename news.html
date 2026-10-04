@@ -21,6 +21,11 @@
   <div id="newsDetails">
 </div>
 
+<script>
+  if (localStorage.getItem("rvp_dark_mode") === "true") {
+    document.body.classList.add("dark-mode");
+  }
+</script>
   <script type="module" src="news.js?v=20260831-2"></script>
 </body>
 </html>
