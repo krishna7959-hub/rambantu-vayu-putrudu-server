@@ -85,6 +85,10 @@ window.toggleSaveNews = function(event, newsId) {
     saved
   );
 
+  displaySavedNews();
+
+  showSavedNewsToast(saved);
+
 };
 
 
@@ -125,6 +129,8 @@ async function loadNews() {
 
     displayNews(allNews);
 
+    displaySavedNews();
+
     loadBreakingNews();
 
   } catch (err) {
@@ -152,8 +158,171 @@ async function loadNews() {
 
 
 // =========================================
+// Open Saved News
+// =========================================
+
+window.openSavedNews = function() {
+
+  const section =
+    document.getElementById("savedNewsSection");
+
+  if (!section) {
+    return;
+  }
+
+  displaySavedNews();
+
+  section.style.display = "block";
+
+  section.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+
+};
+
+
+// =========================================
+// Saved News Toast
+// =========================================
+
+function showSavedNewsToast(saved) {
+
+  let toast = document.getElementById("savedNewsToast");
+
+  if (!toast) {
+
+    toast = document.createElement("div");
+
+    toast.id = "savedNewsToast";
+
+    document.body.appendChild(toast);
+
+  }
+
+  const count =
+    getSavedNewsIds().length;
+
+  toast.innerHTML = saved
+    ? `
+      <div class="saved-toast-title">🔖 News Saved!</div>
+      <div class="saved-toast-bottom">
+        <span>${count} Saved News</span>
+        <button type="button" onclick="openSavedNews()">View</button>
+      </div>
+    `
+    : `
+      <div class="saved-toast-title">↩️ Removed from Saved</div>
+      <div class="saved-toast-bottom">
+        <span>${count} Saved News</span>
+      </div>
+    `;
+
+  toast.classList.remove("show");
+
+  void toast.offsetWidth;
+
+  toast.classList.add("show");
+
+  clearTimeout(window.savedNewsToastTimer);
+
+  window.savedNewsToastTimer =
+    setTimeout(() => {
+
+      toast.classList.remove("show");
+
+    }, 2800);
+
+}
+
+
+// =========================================
+// Saved News List
+// =========================================
+
+
+function displaySavedNews() {
+
+  const section =
+    document.getElementById("savedNewsSection");
+
+  const container =
+    document.getElementById("savedNewsContainer");
+
+  if (!section || !container) {
+    return;
+  }
+
+  const savedNewsIds =
+    getSavedNewsIds();
+
+  const savedNews =
+    allNews.filter(news =>
+      savedNewsIds.includes(news.id)
+    );
+
+  if (!savedNews.length) {
+    section.style.display = "none";
+    container.innerHTML = "";
+    return;
+  }
+
+  section.style.display = "block";
+
+  let html = "";
+
+  savedNews.forEach((news) => {
+
+    html += `
+      <div
+        class="news-card"
+        onclick="location.href='news.html?id=${news.id}'"
+      >
+
+        <img
+          src="${news.image || ""}"
+          alt=""
+        >
+
+        <div class="news-content">
+
+          <span class="category-badge">
+            ${news.category || "News"}
+          </span>
+
+          <h3>
+            ${news.title || ""}
+          </h3>
+
+          <p>
+            ${(news.details || "").substring(0, 120)}...
+          </p>
+
+          <button
+            type="button"
+            class="save-btn saved"
+            onclick="toggleSaveNews(event, '${news.id}')"
+          >
+            🔖 Saved
+          </button>
+
+        </div>
+
+      </div>
+    `;
+
+  });
+
+  container.innerHTML = html;
+
+}
+
+
+// =========================================
 // Share News
 // =========================================
+
+
 
 window.shareNews =
   function (event, id, title) {
