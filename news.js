@@ -645,7 +645,10 @@ console.log("NEWS DEBUG: News ID =", id);
     `;
 
 
-    window.currentNews = news;
+    window.currentNews = {
+      ...news,
+      id: id
+    };
     const likeButton =
       document.getElementById("newsLikeBtn");
 
