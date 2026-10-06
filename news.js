@@ -726,6 +726,13 @@ async function updateNewsLike() {
   const newsId = window.currentNews.id;
   const storageKey = "rvp_news_liked_" + newsId;
 
+  if (button.dataset.likeProcessing === "true") {
+    return;
+  }
+
+  button.dataset.likeProcessing = "true";
+  button.disabled = true;
+
   let liked = localStorage.getItem(storageKey) === "true";
 
   try {
@@ -773,6 +780,11 @@ async function updateNewsLike() {
       "Like Error:",
       error
     );
+
+  } finally {
+
+    button.disabled = false;
+    button.dataset.likeProcessing = "false";
 
   }
 
