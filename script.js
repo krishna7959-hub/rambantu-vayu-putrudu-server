@@ -1270,10 +1270,18 @@ async function loadNews() {
 
 
     let totalViews = 0;
+    const analyticsNews = [];
 
     snapshot.forEach((newsDoc) => {
       const newsData = newsDoc.data();
-      totalViews += Number(newsData.views || 0);
+      const views = Number(newsData.views || 0);
+      totalViews += views;
+
+      analyticsNews.push({
+        id: newsDoc.id,
+        title: newsData.title || "",
+        views
+      });
     });
 
     const dashboardNewsCount =
@@ -1288,6 +1296,42 @@ async function loadNews() {
 
     if (dashboardViewsCount) {
       dashboardViewsCount.textContent = totalViews.toLocaleString();
+    }
+
+    const mostViewedNews =
+      document.getElementById("mostViewedNews");
+
+    if (mostViewedNews) {
+      const topNews = [...analyticsNews]
+        .sort((a, b) => b.views - a.views)
+        .slice(0, 10);
+
+      if (topNews.length === 0) {
+        mostViewedNews.innerHTML =
+          "<p>ఇంకా Analytics data లేదు.</p>";
+      } else {
+        mostViewedNews.innerHTML = topNews
+          .map((news, index) => {
+            const rank =
+              index === 0 ? "🥇" :
+              index === 1 ? "🥈" :
+              index === 2 ? "🥉" :
+              `${index + 1}.`;
+
+            return `
+              <div class="analytics-item">
+                <div class="analytics-rank">${rank}</div>
+                <div class="analytics-title">
+                  ${escapeHTML(news.title)}
+                </div>
+                <div class="analytics-views">
+                  👁️ ${news.views.toLocaleString()}
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+      }
     }
 
     if (

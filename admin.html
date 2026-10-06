@@ -67,8 +67,11 @@
     👁️ Published News & Views
   </button>
 
-  <button type="button" class="coming-soon" disabled>
-    📊 Analytics — Coming Soon
+  <button
+    type="button"
+    onclick="toggleAnalytics(); closeAdminMenu();"
+  >
+    📊 Analytics
   </button>
 </div>
 
@@ -106,6 +109,17 @@
     <div class="dashboard-icon">💬</div>
     <div class="dashboard-label">Total Comments</div>
     <div id="dashboardCommentsCount" class="dashboard-value">0</div>
+  </div>
+</section>
+
+<section id="analyticsSection" class="analytics-section" style="display:none;">
+  <div class="analytics-header">
+    <h2>📊 Analytics</h2>
+    <p>🏆 Most Viewed News — Top 10</p>
+  </div>
+
+  <div id="mostViewedNews">
+    <p>Loading Analytics...</p>
   </div>
 </section>
 
@@ -290,6 +304,28 @@ function closeAdminMenu() {
 
   if (panel) {
     panel.style.display = "none";
+  }
+}
+
+function toggleAnalytics() {
+  const section = document.getElementById("analyticsSection");
+
+  if (!section) {
+    return;
+  }
+
+  const isHidden =
+    section.style.display === "none" ||
+    section.style.display === "";
+
+  section.style.display =
+    isHidden ? "block" : "none";
+
+  if (isHidden) {
+    section.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
   }
 }
 </script>

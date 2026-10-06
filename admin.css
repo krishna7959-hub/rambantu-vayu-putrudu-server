@@ -312,3 +312,72 @@ button:hover {
     }
 }
 
+
+/* ANALYTICS */
+.analytics-section {
+    margin: 20px 0 28px;
+    padding: 18px;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+    border: 1px solid #eeeeee;
+}
+
+.analytics-header h2 {
+    margin: 0 0 4px;
+}
+
+.analytics-header p {
+    margin: 0 0 14px;
+    color: #666;
+    font-weight: 600;
+}
+
+#mostViewedNews {
+    display: grid;
+    gap: 8px;
+}
+
+.analytics-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    background: #f7f7f7;
+    border-radius: 9px;
+}
+
+.analytics-rank {
+    min-width: 32px;
+    font-weight: 800;
+}
+
+.analytics-title {
+    flex: 1;
+    font-weight: 600;
+}
+
+.analytics-views {
+    white-space: nowrap;
+    font-weight: 700;
+    color: #1565c0;
+}
+
+@media (max-width: 700px) {
+    .analytics-section {
+        padding: 14px;
+    }
+
+    .analytics-item {
+        align-items: flex-start;
+    }
+
+    .analytics-title {
+        font-size: 14px;
+    }
+
+    .analytics-views {
+        font-size: 14px;
+    }
+}
