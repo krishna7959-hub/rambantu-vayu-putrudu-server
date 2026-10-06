@@ -40,6 +40,38 @@
 </script>
 
 
+<button
+  id="adminMenuButton"
+  type="button"
+  aria-label="Admin Menu"
+  title="Admin Menu"
+  onclick="toggleAdminMenu()"
+>
+  ⋮
+</button>
+
+<div id="adminMenuPanel">
+  <button type="button" onclick="document.getElementById('title').scrollIntoView({behavior:'smooth'}); closeAdminMenu();">
+    📰 News Management
+  </button>
+
+  <button type="button" onclick="document.getElementById('breakingNews').scrollIntoView({behavior:'smooth'}); closeAdminMenu();">
+    🚨 Breaking & Push
+  </button>
+
+  <button type="button" onclick="document.getElementById('commentsSection').scrollIntoView({behavior:'smooth'}); closeAdminMenu();">
+    💬 Comments
+  </button>
+
+  <button type="button" onclick="document.getElementById('newsList').scrollIntoView({behavior:'smooth'}); closeAdminMenu();">
+    👁️ Published News & Views
+  </button>
+
+  <button type="button" class="coming-soon" disabled>
+    📊 Analytics — Coming Soon
+  </button>
+</div>
+
 <div class="container">
 <!-- Floating Comments Button -->
 
@@ -56,6 +88,26 @@
 >
   💬 Comments
 </button>
+
+<section id="dashboardSummary" class="dashboard-summary">
+  <div class="dashboard-card">
+    <div class="dashboard-icon">📰</div>
+    <div class="dashboard-label">Total Published News</div>
+    <div id="dashboardNewsCount" class="dashboard-value">0</div>
+  </div>
+
+  <div class="dashboard-card">
+    <div class="dashboard-icon">👁️</div>
+    <div class="dashboard-label">Total Views</div>
+    <div id="dashboardViewsCount" class="dashboard-value">0</div>
+  </div>
+
+  <div class="dashboard-card">
+    <div class="dashboard-icon">💬</div>
+    <div class="dashboard-label">Total Comments</div>
+    <div id="dashboardCommentsCount" class="dashboard-value">0</div>
+  </div>
+</section>
 
 <h2>📰 News Upload</h2>
 
@@ -218,6 +270,29 @@
   src="script.js"
 ></script>
 
+
+<script>
+function toggleAdminMenu() {
+  const panel = document.getElementById("adminMenuPanel");
+
+  if (!panel) {
+    return;
+  }
+
+  panel.style.display =
+    panel.style.display === "block"
+      ? "none"
+      : "block";
+}
+
+function closeAdminMenu() {
+  const panel = document.getElementById("adminMenuPanel");
+
+  if (panel) {
+    panel.style.display = "none";
+  }
+}
+</script>
 
 </body>
 

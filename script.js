@@ -1269,6 +1269,27 @@ async function loadNews() {
       );
 
 
+    let totalViews = 0;
+
+    snapshot.forEach((newsDoc) => {
+      const newsData = newsDoc.data();
+      totalViews += Number(newsData.views || 0);
+    });
+
+    const dashboardNewsCount =
+      document.getElementById("dashboardNewsCount");
+
+    const dashboardViewsCount =
+      document.getElementById("dashboardViewsCount");
+
+    if (dashboardNewsCount) {
+      dashboardNewsCount.textContent = snapshot.size;
+    }
+
+    if (dashboardViewsCount) {
+      dashboardViewsCount.textContent = totalViews.toLocaleString();
+    }
+
     if (
       snapshot.empty
     ) {
@@ -1623,6 +1644,13 @@ async function loadAdminComments() {
         commentsQuery
       );
 
+
+    const dashboardCommentsCount =
+      document.getElementById("dashboardCommentsCount");
+
+    if (dashboardCommentsCount) {
+      dashboardCommentsCount.textContent = snapshot.size;
+    }
 
     if (
       snapshot.empty
