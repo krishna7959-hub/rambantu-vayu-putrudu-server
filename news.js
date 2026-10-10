@@ -688,7 +688,7 @@ console.log("NEWS DEBUG: News ID =", id);
 
     await loadComments(id);
 
-    await loadRelatedNews(id);
+    await loadRelatedNews(id, news.category);
 
     loadAdSenseForArticle();
 
@@ -2104,116 +2104,77 @@ function escapeHTML(text) {
 // RELATED NEWS
 // =========================================
 
-async function loadRelatedNews(
-  currentId
-) {
+async function loadRelatedNews(currentId, currentCategory) {
+  const related = document.getElementById("relatedNews");
 
-  const related =
-    document.getElementById(
-      "relatedNews"
-    );
-
-
-  if (!related) {
-    return;
-  }
-
+  if (!related) return;
 
   try {
+    const category = String(currentCategory || "").trim().toLowerCase();
 
-    const snap =
-      await getDocs(
-        collection(db, "news")
-      );
+    if (!category) {
+      related.replaceChildren();
+      const message = document.createElement("p");
+      message.textContent = "ఈ వార్తకు కేటగిరీ అందుబాటులో లేదు.";
+      related.appendChild(message);
+      return;
+    }
 
-
-    let html = "";
-
+    const snap = await getDocs(collection(db, "news"));
+    const fragment = document.createDocumentFragment();
     let count = 0;
 
+    snap.forEach((newsDoc) => {
+      if (newsDoc.id === currentId || count >= 5) return;
 
-    snap.forEach(
-      function (newsDoc) {
+      const n = newsDoc.data();
+      const newsCategory = String(n.category || "").trim().toLowerCase();
 
-        if (
-          newsDoc.id !== currentId &&
-          count < 5
-        ) {
+      if (newsCategory !== category) return;
 
-          const n =
-            newsDoc.data();
+      const link = document.createElement("a");
+      link.className = "news-card";
+      link.href = `news.html?id=${encodeURIComponent(newsDoc.id)}`;
+      link.style.display = "block";
+      link.style.color = "inherit";
+      link.style.textDecoration = "none";
 
+      const img = document.createElement("img");
+      img.src = typeof n.image === "string" ? n.image : "";
+      img.alt = typeof n.title === "string" ? n.title : "Related news";
+      img.loading = "lazy";
 
-          html += `
+      const content = document.createElement("div");
+      content.className = "news-content";
 
-            <div
-              class="news-card"
-              onclick="
-                location.href=
-                'news.html?id=${newsDoc.id}'
-              "
-            >
+      const heading = document.createElement("h3");
+      heading.textContent = typeof n.title === "string" ? n.title : "";
 
-              <img
-                src="${escapeHTML(n.image || "")}"
-              >
+      content.appendChild(heading);
+      link.appendChild(img);
+      link.appendChild(content);
+      fragment.appendChild(link);
 
+      count++;
+    });
 
-              <div class="news-content">
+    related.replaceChildren();
 
-                <h3>
-                  ${
-                    escapeHTML(
-                      n.title || ""
-                    )
-                  }
-                </h3>
-
-              </div>
-
-            </div>
-
-          `;
-
-
-          count++;
-
-        }
-
-      }
-    );
-
-
-    if (html) {
-
-      related.innerHTML =
-        html;
-
+    if (count > 0) {
+      related.appendChild(fragment);
+    } else {
+      const message = document.createElement("p");
+      message.textContent = "ఈ కేటగిరీలో ఇతర సంబంధిత వార్తలు లేవు.";
+      related.appendChild(message);
     }
+  } catch (error) {
+    console.error("Related News Error:", error);
 
-    else {
-
-      related.innerHTML =
-        "<p>Related News లేవు.</p>";
-
-    }
-
+    const message = document.createElement("p");
+    message.textContent = "Related News Load కాలేదు.";
+    related.replaceChildren(message);
   }
-
-  catch (error) {
-
-    console.error(
-      "Related News Error:",
-      error
-    );
-
-    related.innerHTML =
-      "<p>Related News Load కాలేదు.</p>";
-
-  }
-
 }
-
 
 // =========================================
 // START
