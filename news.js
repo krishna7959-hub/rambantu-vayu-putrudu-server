@@ -212,7 +212,7 @@ console.log("NEWS DEBUG: News ID =", id);
       news.title ||
       "Rambantu Vayu Putrudu";
 
-    const articleDescription =
+    const rawArticleDescription =
       (
         Array.isArray(news.sections) && news.sections.length
           ? news.sections
@@ -221,8 +221,30 @@ console.log("NEWS DEBUG: News ID =", id);
           : news.details || ""
       )
         .replace(/\s+/g, " ")
-        .trim()
-        .substring(0, 160);
+        .trim();
+
+    const fallbackDescription =
+      news.title
+        ? `${news.title} — Rambantu Vayu Putrudu వార్తా కథనం.`
+        : "తాజా తెలుగు వార్తలు, రాజకీయాలు, విద్య, క్రీడలు మరియు ముఖ్యమైన పరిణామాలు — Rambantu Vayu Putrudu.";
+
+    const articleDescription = (() => {
+      const text =
+        rawArticleDescription || fallbackDescription;
+
+      if (text.length <= 160) {
+        return text;
+      }
+
+      const shortened = text.slice(0, 160);
+      const lastSpace = shortened.lastIndexOf(" ");
+      const result =
+        lastSpace >= 100
+          ? shortened.slice(0, lastSpace)
+          : shortened;
+
+      return result.replace(/[.,;:!?…\s-]+$/, "") + "…";
+    })();
 
     const articleImage =
       news.image ||
