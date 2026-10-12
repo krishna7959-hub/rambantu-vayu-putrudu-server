@@ -343,6 +343,10 @@ a {
 
 .header {
     background: #b30000;
+    background-image: url('header-red-waves.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     color: #fff;
     padding: 12px 15px;
     display: flex;
@@ -365,10 +369,27 @@ a {
     height: auto;
     font-size: 24px;
     border-radius: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logo-brand {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
 }
 
 .logo b {
     font-size: 32px;
+}
+
+.logo-telugu {
+    display: block;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.4;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
 }
 
 .logo-text h1 {
@@ -749,9 +770,20 @@ nav a:hover {
     }
 
     .logo {
-        width: 50px;
-        height: 50px;
-        font-size: 24px;
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        font-size: 20px;
+    }
+
+    .logo b {
+        font-size: 22px;
+    }
+
+    .logo-telugu {
+        font-size: 15px;
+        font-weight: 700;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
     }
 
     .news-card img {
