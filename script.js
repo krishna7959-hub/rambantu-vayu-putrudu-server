@@ -96,9 +96,13 @@ function saveNewsDraft() {
   const categoryInput =
     document.getElementById("category");
 
+  const authorNameInput =
+    document.getElementById("authorName");
+
   if (
     !titleInput ||
     !categoryInput ||
+    !authorNameInput ||
     !newsSections
   ) {
     return;
@@ -108,6 +112,7 @@ function saveNewsDraft() {
     title: titleInput.value,
     sections: getNewsSections(),
     category: categoryInput.value,
+    authorName: authorNameInput.value.trim(),
     savedAt: new Date().toISOString()
   };
 
@@ -176,9 +181,13 @@ function restoreNewsDraft() {
     const categoryInput =
       document.getElementById("category");
 
+    const authorNameInput =
+      document.getElementById("authorName");
+
     if (
       !titleInput ||
       !categoryInput ||
+      !authorNameInput ||
       !newsSections
     ) {
       return;
@@ -187,6 +196,7 @@ function restoreNewsDraft() {
     const hasDraftContent =
       draft.title ||
       draft.category ||
+      draft.authorName ||
       (
         Array.isArray(
           draft.sections
@@ -223,6 +233,9 @@ function restoreNewsDraft() {
 
     categoryInput.value =
       draft.category || "";
+
+    authorNameInput.value =
+      draft.authorName || "";
 
     loadSectionsIntoForm(
       Array.isArray(
@@ -280,6 +293,9 @@ const titleInputForDraft =
 const categoryInputForDraft =
   document.getElementById("category");
 
+const authorNameInputForDraft =
+  document.getElementById("authorName");
+
 if (titleInputForDraft) {
 
   titleInputForDraft.addEventListener(
@@ -293,6 +309,15 @@ if (categoryInputForDraft) {
 
   categoryInputForDraft.addEventListener(
     "change",
+    scheduleNewsDraftSave
+  );
+
+}
+
+if (authorNameInputForDraft) {
+
+  authorNameInputForDraft.addEventListener(
+    "input",
     scheduleNewsDraftSave
   );
 
@@ -870,6 +895,13 @@ if (publishBtn) {
           .value;
 
 
+      const authorName =
+        document
+          .getElementById("authorName")
+          .value
+          .trim();
+
+
       const imageFile =
         document
           .getElementById(
@@ -1022,6 +1054,9 @@ if (publishBtn) {
               category:
                 category,
 
+              authorName:
+                authorName,
+
               image:
                 imageURL ||
                 oldData.image ||
@@ -1074,6 +1109,9 @@ if (publishBtn) {
 
               category:
                 category,
+
+              authorName:
+                authorName,
 
               image:
                 imageURL,
@@ -1191,6 +1229,10 @@ if (publishBtn) {
           )
           .value =
           "";
+
+        document
+          .getElementById("authorName")
+          .value = "";
 
 
         document
@@ -1596,6 +1638,13 @@ window.editNews =
         )
         .value =
         news.category ||
+        "";
+
+
+      document
+        .getElementById("authorName")
+        .value =
+        news.authorName ||
         "";
 
 

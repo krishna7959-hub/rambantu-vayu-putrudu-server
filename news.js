@@ -538,6 +538,14 @@ console.log("NEWS DEBUG: News ID =", id);
 
 </div>
 
+        <p class="news-author">
+          ✍️ రచయిత: ${escapeHTML(
+            (typeof news.authorName === "string" && news.authorName.trim())
+              ? news.authorName.trim()
+              : "RVP News Desk"
+          )}
+        </p>
+
         <br>
 
 
