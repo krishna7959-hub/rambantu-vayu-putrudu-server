@@ -33,6 +33,32 @@ const params =
 
 const id = params.get("id");
 
+// =========================================
+// IMAGEKIT IMAGE OPTIMIZATION
+// =========================================
+function optimizeImageUrl(url, width) {
+  if (typeof url !== "string" || !url) return "";
+
+  try {
+    const parsed = new URL(url, window.location.origin);
+
+    // Optimize only this ImageKit account; leave other URLs unchanged.
+    if (
+      parsed.hostname !== "ik.imagekit.io" ||
+      !parsed.pathname.startsWith("/eacbgtqnl/")
+    ) {
+      return url;
+    }
+
+    const transformations = `w-${width},q-75,f-auto`;
+    parsed.pathname = `/eacbgtqnl/tr:${transformations}${parsed.pathname.slice("/eacbgtqnl".length)}`;
+
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
 const newsDetails =
   document.getElementById("newsDetails");
 
@@ -462,7 +488,7 @@ console.log("NEWS DEBUG: News ID =", id);
         <div class="news-image-container">
 
           <img
-            src="${escapeHTML(news.image || "")}"
+            src="${escapeHTML(optimizeImageUrl(news.image || "", 1200))}"
             class="news-image"
           >
 
@@ -2170,7 +2196,7 @@ async function loadRelatedNews(currentId, currentCategory) {
       link.style.textDecoration = "none";
 
       const img = document.createElement("img");
-      img.src = typeof n.image === "string" ? n.image : "";
+      img.src = optimizeImageUrl(typeof n.image === "string" ? n.image : "", 400);
       img.alt = typeof n.title === "string" ? n.title : "Related news";
       img.loading = "lazy";
 
