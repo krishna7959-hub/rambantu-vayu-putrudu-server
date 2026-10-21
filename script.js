@@ -939,69 +939,68 @@ if (publishBtn) {
 
 
         // =================================
-        // CLOUDINARY IMAGE UPLOAD
-        // =================================
+        // IMAGEKIT IMAGE UPLOAD
+        // Obtain short-lived upload credentials from the protected server.
 
         if (imageFile) {
+          const user = auth.currentUser;
 
-          const formData =
-            new FormData();
-
-
-          formData.append(
-            "file",
-            imageFile
-          );
-
-
-          formData.append(
-            "upload_preset",
-            "News_upload"
-          );
-
-
-          const upload =
-            await fetch(
-              "https://api.cloudinary.com/v1_1/zzofbzm1/image/upload",
-              {
-
-                method:
-                  "POST",
-
-                body:
-                  formData
-
-              }
-            );
-
-
-          const uploadData =
-            await upload.json();
-
-
-          if (
-            !uploadData.secure_url
-          ) {
-
-            console.error(
-              uploadData
-            );
-
-
-            throw new Error(
-              "Image upload failed"
-            );
-
+          if (!user) {
+            throw new Error("Admin authentication required");
           }
 
+          const idToken = await user.getIdToken();
 
-          imageURL =
-            uploadData.secure_url;
+          const authResponse = await fetch(
+            "https://rambantu-vayu-putrudu-server.onrender.com/imagekit-auth",
+            {
+              method: "GET",
+              headers: {
+                "Authorization": `Bearer ${idToken}`
+              }
+            }
+          );
 
+          const authData = await authResponse.json();
+
+          if (
+            !authResponse.ok ||
+            !authData.token ||
+            !authData.signature ||
+            !authData.expire ||
+            !authData.publicKey
+          ) {
+            console.error("ImageKit authentication failed:", authResponse.status);
+            throw new Error("Image upload authorization failed");
+          }
+
+          const formData = new FormData();
+          formData.append("file", imageFile);
+          formData.append("fileName", imageFile.name);
+          formData.append("publicKey", authData.publicKey);
+          formData.append("token", authData.token);
+          formData.append("signature", authData.signature);
+          formData.append("expire", String(authData.expire));
+
+          const upload = await fetch(
+            "https://upload.imagekit.io/api/v1/files/upload",
+            {
+              method: "POST",
+              body: formData
+            }
+          );
+
+          const uploadData = await upload.json();
+
+          if (!upload.ok || !uploadData.url) {
+            console.error("ImageKit upload failed:", upload.status);
+            throw new Error("Image upload failed");
+          }
+
+          imageURL = uploadData.url;
         }
 
 
-        // =================================
         // UPDATE EXISTING NEWS
         // =================================
 

@@ -71,6 +71,38 @@ app.use(cors({ origin: ["https://rambantu-vayu-putrudu.web.app", "https://ramban
 app.use(express.json({ limit: "20kb" }));
 
 /* =========================================
+   IMAGEKIT UPLOAD AUTHENTICATION
+========================================= */
+const ImageKit = require("@imagekit/nodejs").default;
+
+app.get("/imagekit-auth", requireAdmin, (req, res) => {
+  try {
+    const privateKey = process.env.IMAGEKIT_PRIVATE_KEY;
+    const publicKey = process.env.IMAGEKIT_PUBLIC_KEY;
+
+    if (!privateKey || !publicKey || !process.env.IMAGEKIT_URL_ENDPOINT) {
+      return res.status(503).json({
+        success: false,
+        message: "Image upload service is not configured"
+      });
+    }
+
+    const imageKit = new ImageKit({ privateKey });
+    const { token, expire, signature } =
+      imageKit.helper.getAuthenticationParameters();
+
+    return res.json({ token, expire, signature, publicKey });
+  } catch (error) {
+    console.error("ImageKit authentication setup failed");
+    return res.status(500).json({
+      success: false,
+      message: "Could not authorize image upload"
+    });
+  }
+});
+
+
+/* =========================================
    ONESIGNAL
 ========================================= */
 
