@@ -67,7 +67,7 @@ function rateLimitSend(ip) {
   return entry.count <= maxAttempts;
 }
 
-app.use(cors({ origin: ["https://rambantu-vayu-putrudu.web.app", "https://rambantu-vayu-putrudu.firebaseapp.com"], methods: ["GET", "POST"], allowedHeaders: ["Content-Type", "Authorization"] }));
+app.use(cors({ origin: ["https://rambantu-vayu-putrudu.web.app", "https://rambantu-vayu-putrudu.firebaseapp.com", "https://rambantu-vayu-putrudu--imagekit-test-pqmn3y4d.web.app"], methods: ["GET", "POST"], allowedHeaders: ["Content-Type", "Authorization"] }));
 app.use(express.json({ limit: "20kb" }));
 
 /* =========================================
