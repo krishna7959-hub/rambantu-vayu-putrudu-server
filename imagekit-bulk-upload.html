@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RVP News — ImageKit Bulk Upload</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:900px;margin:24px auto;padding:0 16px;color:#222}h1{font-size:24px}button,input{font-size:16px;padding:10px;margin:6px 0}button{cursor:pointer}#log{white-space:pre-wrap;background:#f5f5f5;padding:12px;border-radius:8px;max-height:360px;overflow:auto}.warn{color:#9a3412}progress{width:100%;height:22px}small{color:#555}
+</style>
+</head>
+<body>
+<h1>RVP News — ImageKit Bulk Upload</h1>
+<p>Sign in with the authorized RVP News admin Google account, select the extracted images folder, then upload. This page uploads images to ImageKit only; it does <b>not</b> change Firestore news articles.</p>
+<p id="status">Checking sign-in…</p>
+<button id="login" hidden>Sign in with Google</button>
+<div><label for="files"><b>Select extracted image folder:</b></label><br><input id="files" type="file" webkitdirectory multiple disabled></div>
+<button id="start" disabled>Start ImageKit Upload</button>
+<button id="stop" disabled>Stop after current file</button>
+<progress id="progress" value="0" max="1"></progress>
+<p id="counts">0 uploaded</p>
+<p class="warn"><small>Keep this page open until finished. Successful files are recorded in the downloaded JSON manifest. Failed uploads can be retried.</small></p>
+<div id="log">Ready.</div>
+<script type="module">
+import { auth, googleProvider } from './firebase.js';
+import { signInWithPopup, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+const statusEl=document.getElementById('status'), loginBtn=document.getElementById('login'), filesEl=document.getElementById('files'), startBtn=document.getElementById('start'), stopBtn=document.getElementById('stop'), progressEl=document.getElementById('progress'), countsEl=document.getElementById('counts'), logEl=document.getElementById('log');
+let currentUser=null, stopRequested=false, busy=false; const manifest=[]; const failed=[];
+function log(s){logEl.textContent += '\n'+s; logEl.scrollTop=logEl.scrollHeight;}
+loginBtn.addEventListener('click',async()=>{try{await signInWithPopup(auth,googleProvider)}catch(e){log('Sign-in failed: '+(e.message||e));}});
+onAuthStateChanged(auth,user=>{currentUser=user; statusEl.textContent=user?'Signed in: '+(user.email||user.displayName||'Google account'):'Not signed in';loginBtn.hidden=!!user;filesEl.disabled=!user||busy;startBtn.disabled=!user||busy;});
+stopBtn.addEventListener('click',()=>{stopRequested=true;stopBtn.disabled=true;log('Stop requested; current upload will finish.');});
+startBtn.addEventListener('click',async()=>{
+ if(busy)return; const files=[...filesEl.files].filter(f=>f.type.startsWith('image/') && f.name!=='photo-list.txt' && f.name!=='01_suzlon_ap_10000_crore_i3v7vz.webp');
+ if(!currentUser){log('Please sign in first.');return;} if(!files.length){log('No image files selected. Select the Extracted folder.');return;}
+ if(!confirm(`Upload ${files.length} image files to ImageKit? This will not update any news article.`))return;
+ busy=true;stopRequested=false;startBtn.disabled=true;filesEl.disabled=true;stopBtn.disabled=false;progressEl.max=files.length;progressEl.value=0;let ok=0;
+ try{
+  for(let i=0;i<files.length;i++){
+   if(stopRequested)break; const file=files[i];
+   try{
+    const idToken=await currentUser.getIdToken();
+    const ar=await fetch('https://rambantu-vayu-putrudu-server.onrender.com/imagekit-auth',{headers:{Authorization:`Bearer ${idToken}`} });
+    const ad=await ar.json(); if(!ar.ok||!ad.token||!ad.signature||!ad.expire||!ad.publicKey)throw new Error('Auth endpoint rejected request ('+ar.status+').');
+    const fd=new FormData();fd.append('file',file);fd.append('fileName',file.name);fd.append('publicKey',ad.publicKey);fd.append('token',ad.token);fd.append('signature',ad.signature);fd.append('expire',String(ad.expire));
+    const ur=await fetch('https://upload.imagekit.io/api/v1/files/upload',{method:'POST',body:fd});const ud=await ur.json();if(!ur.ok||!ud.url)throw new Error(ud.message||('ImageKit upload failed ('+ur.status+')'));
+    manifest.push({fileName:file.name,url:ud.url,fileId:ud.fileId||'',size:file.size});ok++;log(`OK ${i+1}/${files.length} — ${file.name}`);
+   }catch(e){failed.push({fileName:file.name,error:e.message||String(e)});log(`FAILED ${i+1}/${files.length} — ${file.name} — ${e.message||e}`);}
+   progressEl.value=i+1;countsEl.textContent=`${ok} uploaded; ${failed.length} failed; ${i+1} of ${files.length} processed`;
+  }
+ }finally{
+  busy=false;filesEl.disabled=!currentUser;startBtn.disabled=!currentUser;stopBtn.disabled=true;
+  const out={createdAt:new Date().toISOString(),totalSelected:files.length,uploaded:manifest.length,failed,files:manifest};
+  const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='rvp-imagekit-upload-manifest.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+  log(stopRequested?'Stopped. Manifest downloaded.':'Finished. Manifest downloaded.');
+ }
+});
+</script>
+</body>
+</html>
