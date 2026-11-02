@@ -940,6 +940,55 @@ function setImageOptimizationStatus(message, isError = false) {
 
 
 // =========================================
+// INSTANT WEBP CONVERSION ON FILE SELECTION
+// =========================================
+
+let imageConversionPromise = null;
+let imageConversionSourceFile = null;
+
+const imageInputForWebP = document.getElementById("image");
+
+if (imageInputForWebP) {
+  imageInputForWebP.addEventListener("change", () => {
+    const selectedFile = imageInputForWebP.files?.[0] || null;
+
+    imageConversionSourceFile = selectedFile;
+    imageConversionPromise = null;
+
+    if (!selectedFile) {
+      setImageOptimizationStatus(
+        "📷 JPG / PNG / WebP ఫోటోలు ఆటోమేటిక్‌గా WebPగా మార్చబడతాయి (గరిష్ఠం 1200px)."
+      );
+      return;
+    }
+
+    setImageOptimizationStatus("⏳ ఫోటోను WebPగా మారుస్తున్నాం...");
+
+    imageConversionPromise = convertImageToWebP(selectedFile)
+      .then(optimized => {
+        if (imageConversionSourceFile !== selectedFile) return null;
+
+        setImageOptimizationStatus(
+          `✅ WebP సిద్ధం: ${formatFileSize(optimized.originalSize)} → ${formatFileSize(optimized.file.size)} (${optimized.width} × ${optimized.height}px)`
+        );
+
+        return optimized.file;
+      })
+      .catch(error => {
+        if (imageConversionSourceFile === selectedFile) {
+          console.error("WebP conversion failed:", error);
+          setImageOptimizationStatus(
+            `❌ WebP Conversion విఫలమైంది: ${error.message}`,
+            true
+          );
+        }
+        return null;
+      });
+  });
+}
+
+
+// =========================================
 // PUBLISH NEWS
 // =========================================
 
@@ -994,6 +1043,11 @@ if (publishBtn) {
             "image"
           )
           .files[0];
+
+      const imageConversionForPublish =
+        imageConversionSourceFile === imageFile
+          ? imageConversionPromise
+          : null;
 
 
       // ===================================
@@ -1060,14 +1114,23 @@ if (publishBtn) {
             throw new Error("Image upload authorization failed");
           }
 
-          setImageOptimizationStatus("⏳ ఫోటోను WebPగా మారుస్తున్నాం...");
+          let uploadFile;
 
-          const optimized = await convertImageToWebP(imageFile);
-          const uploadFile = optimized.file;
+          if (imageConversionForPublish) {
+            uploadFile = await imageConversionForPublish;
+          } else {
+            setImageOptimizationStatus("⏳ ఫోటోను WebPగా మారుస్తున్నాం...");
+            const optimized = await convertImageToWebP(imageFile);
+            uploadFile = optimized.file;
 
-          setImageOptimizationStatus(
-            `✅ WebP సిద్ధం: ${formatFileSize(optimized.originalSize)} → ${formatFileSize(uploadFile.size)} (${optimized.width} × ${optimized.height}px)`
-          );
+            setImageOptimizationStatus(
+              `✅ WebP సిద్ధం: ${formatFileSize(optimized.originalSize)} → ${formatFileSize(uploadFile.size)} (${optimized.width} × ${optimized.height}px)`
+            );
+          }
+
+          if (!uploadFile) {
+            throw new Error("WebP Conversion విఫలమైంది. దయచేసి ఫోటోను మళ్లీ ఎంచుకోండి.");
+          }
 
           const formData = new FormData();
           formData.append("file", uploadFile);
@@ -1336,6 +1399,9 @@ if (publishBtn) {
           )
           .value =
           "";
+
+        imageConversionSourceFile = null;
+        imageConversionPromise = null;
 
         setImageOptimizationStatus(
           "📷 JPG / PNG / WebP ఫోటోలు ఆటోమేటిక్‌గా WebPగా మార్చబడతాయి (గరిష్ఠం 1200px)."
