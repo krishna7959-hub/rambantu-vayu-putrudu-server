@@ -992,6 +992,8 @@ if (imageInputForWebP) {
 // PUBLISH NEWS
 // =========================================
 
+let isPublishing = false;
+
 if (publishBtn) {
 
   publishBtn.addEventListener(
@@ -1071,6 +1073,17 @@ if (publishBtn) {
 
       }
 
+      // Prevent duplicate Publish / Update requests.
+      if (isPublishing) {
+        console.warn("Publish already in progress. Duplicate click ignored.");
+        return;
+      }
+
+      isPublishing = true;
+      publishBtn.disabled = true;
+      publishBtn.innerText = editMode
+        ? "⏳ Updating..."
+        : "⏳ Publishing...";
 
       try {
 
@@ -1429,6 +1442,13 @@ if (publishBtn) {
           "Publish కాలేదు."
         );
 
+      }
+      finally {
+        isPublishing = false;
+        publishBtn.disabled = false;
+        publishBtn.innerText = editMode
+          ? "Update News"
+          : "Publish";
       }
 
     }
