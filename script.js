@@ -854,6 +854,92 @@ if (
 
 
 // =========================================
+// IMAGE OPTIMIZATION — BROWSER-SIDE WEBP
+// =========================================
+
+function formatFileSize(bytes) {
+  if (!Number.isFinite(bytes) || bytes < 0) return "";
+  return bytes >= 1024 * 1024
+    ? (bytes / (1024 * 1024)).toFixed(2) + " MB"
+    : (bytes / 1024).toFixed(1) + " KB";
+}
+
+async function convertImageToWebP(file) {
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error("JPG, PNG లేదా WebP ఫోటో మాత్రమే ఎంచుకోండి.");
+  }
+
+  if (typeof createImageBitmap !== "function") {
+    throw new Error("ఈ బ్రౌజర్‌లో ఆటోమేటిక్ ఫోటో మార్పిడి అందుబాటులో లేదు. Chrome తాజా వెర్షన్ ఉపయోగించండి.");
+  }
+
+  let bitmap;
+
+  try {
+    bitmap = await createImageBitmap(file);
+
+    const maxDimension = 1200;
+    const scale = Math.min(
+      1,
+      maxDimension / Math.max(bitmap.width, bitmap.height)
+    );
+
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+      throw new Error("ఫోటోను ప్రాసెస్ చేయలేకపోయాము.");
+    }
+
+    context.drawImage(bitmap, 0, 0, width, height);
+
+    const webpBlob = await new Promise((resolve, reject) => {
+      canvas.toBlob(
+        blob => blob ? resolve(blob) : reject(new Error("WebP conversion విఫలమైంది.")),
+        "image/webp",
+        0.82
+      );
+    });
+
+    if (webpBlob.type !== "image/webp") {
+      throw new Error("మీ బ్రౌజర్ WebP ఫార్మాట్‌ను సృష్టించలేకపోయింది.");
+    }
+
+    const baseName = file.name.replace(/\.[^.]+$/, "") || "rvp-news-image";
+    const webpFile = new File(
+      [webpBlob],
+      baseName + ".webp",
+      { type: "image/webp", lastModified: Date.now() }
+    );
+
+    return {
+      file: webpFile,
+      originalSize: file.size,
+      width,
+      height
+    };
+  } finally {
+    if (bitmap) bitmap.close();
+  }
+}
+
+function setImageOptimizationStatus(message, isError = false) {
+  const status = document.getElementById("imageOptimizationStatus");
+  if (!status) return;
+
+  status.textContent = message;
+  status.style.color = isError ? "#b00020" : "#237a3b";
+}
+
+
+// =========================================
 // PUBLISH NEWS
 // =========================================
 
@@ -974,9 +1060,18 @@ if (publishBtn) {
             throw new Error("Image upload authorization failed");
           }
 
+          setImageOptimizationStatus("⏳ ఫోటోను WebPగా మారుస్తున్నాం...");
+
+          const optimized = await convertImageToWebP(imageFile);
+          const uploadFile = optimized.file;
+
+          setImageOptimizationStatus(
+            `✅ WebP సిద్ధం: ${formatFileSize(optimized.originalSize)} → ${formatFileSize(uploadFile.size)} (${optimized.width} × ${optimized.height}px)`
+          );
+
           const formData = new FormData();
-          formData.append("file", imageFile);
-          formData.append("fileName", imageFile.name);
+          formData.append("file", uploadFile);
+          formData.append("fileName", uploadFile.name);
           formData.append("publicKey", authData.publicKey);
           formData.append("token", authData.token);
           formData.append("signature", authData.signature);
@@ -998,6 +1093,7 @@ if (publishBtn) {
           }
 
           imageURL = uploadData.url;
+          setImageOptimizationStatus("✅ WebP ఫోటో ImageKitలో అప్‌లోడ్ అయింది.");
         }
 
 
@@ -1241,6 +1337,9 @@ if (publishBtn) {
           .value =
           "";
 
+        setImageOptimizationStatus(
+          "📷 JPG / PNG / WebP ఫోటోలు ఆటోమేటిక్‌గా WebPగా మార్చబడతాయి (గరిష్ఠం 1200px)."
+        );
 
         clearNewsSections();
 
