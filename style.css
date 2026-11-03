@@ -1121,3 +1121,33 @@ body.dark-mode .hero p {
     color: #f1f1f1;
 }
 
+
+/* Home Page Admin Authentication Controls */
+#authControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-login-button,
+#adminLogoutButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border: 1px solid #c40000;
+  border-radius: 6px;
+  background: #c40000;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#adminLogoutButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+

@@ -1,7 +1,8 @@
 import { db, auth } from "./firebase.js";
 
 import {
-  onAuthStateChanged
+  onAuthStateChanged,
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
@@ -1399,6 +1400,26 @@ window.bottomFunction =
 
 onAuthStateChanged(auth, (user) => {
 
+  const isAdmin = Boolean(
+    user && ADMIN_UIDS.includes(user.uid)
+  );
+
+  const loginButton = document.getElementById("adminLoginButton");
+  const panelButton = document.getElementById("adminPanelButton");
+  const logoutButton = document.getElementById("adminLogoutButton");
+
+  if (loginButton) {
+    loginButton.style.display = isAdmin ? "none" : "";
+  }
+
+  if (panelButton) {
+    panelButton.style.display = isAdmin ? "" : "none";
+  }
+
+  if (logoutButton) {
+    logoutButton.style.display = isAdmin ? "" : "none";
+  }
+
   // Invalidate older requests and clear previously displayed news.
   newsLoadRequestId++;
   allNews = [];
@@ -1414,6 +1435,25 @@ onAuthStateChanged(auth, (user) => {
   loadNews(user);
 
 });
+
+const homeLogoutButton =
+  document.getElementById("adminLogoutButton");
+
+if (homeLogoutButton) {
+  homeLogoutButton.addEventListener("click", async () => {
+    homeLogoutButton.disabled = true;
+
+    try {
+      await signOut(auth);
+      // onAuthStateChanged automatically reloads Public News
+      // on this same Home Page after logout.
+    } catch (error) {
+      console.error("Admin Logout Error:", error);
+      alert("Logout కాలేదు. దయచేసి మళ్లీ ప్రయత్నించండి.");
+      homeLogoutButton.disabled = false;
+    }
+  });
+}
 /* =========================================
    DARK MODE
 ========================================= */

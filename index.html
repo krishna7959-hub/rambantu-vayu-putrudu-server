@@ -124,7 +124,11 @@
     </select>
 
     <button type="button" id="savedNewsButton" onclick="openSavedNews()">🔖 Saved News</button>
-    <a href="login.html" id="adminLoginButton" class="admin-login-button">🔐 Admin Login</a>
+    <div id="authControls">
+      <a href="login.html" id="adminLoginButton" class="admin-login-button">🔐 Admin Login</a>
+      <a href="admin.html" id="adminPanelButton" class="admin-login-button" style="display:none;">👤 Admin Panel</a>
+      <button type="button" id="adminLogoutButton" style="display:none;">🚪 Logout</button>
+    </div>
     <button type="button" id="darkModeButton">🌙</button>
 
   </div>
