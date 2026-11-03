@@ -254,6 +254,58 @@ app.get("/public-news", async (req, res) => {
   }
 });
 
+
+/* =========================================
+   ADMIN NEWS API - PUBLIC + PRIVATE
+========================================= */
+
+app.get("/admin-news", requireAdmin, async (req, res) => {
+  try {
+    const snapshot = await getFirestore()
+      .collection("news")
+      .orderBy("createdAt", "desc")
+      .get();
+
+    const allNews = [];
+
+    snapshot.forEach((doc) => {
+      const news = doc.data();
+
+      const safeNews = {
+        ...news,
+        id: doc.id
+      };
+
+      if (
+        news.createdAt &&
+        typeof news.createdAt.seconds === "number"
+      ) {
+        safeNews.createdAt = {
+          seconds: news.createdAt.seconds,
+          nanoseconds: news.createdAt.nanoseconds || 0
+        };
+      }
+
+      allNews.push(safeNews);
+    });
+
+    res.set("Cache-Control", "no-store");
+
+    return res.json({
+      success: true,
+      news: allNews
+    });
+
+  } catch (error) {
+    console.error("Admin News API Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to load admin news"
+    });
+  }
+});
+
 /* =========================================
    DYNAMIC SITEMAP
 ========================================= */

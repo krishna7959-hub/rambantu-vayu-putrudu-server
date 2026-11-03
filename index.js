@@ -1,4 +1,8 @@
-import { db } from "./firebase.js";
+import { db, auth } from "./firebase.js";
+
+import {
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
   collection,
@@ -96,63 +100,95 @@ window.toggleSaveNews = function(event, newsId) {
 // Load News
 // =========================================
 
-async function loadNews() {
+const ADMIN_UIDS = [
+  "dGNNq3QH2QfP5fe9P5lct5gHw073",
+  "Y0q7rzVUL2Xdanjpce1QqxsLf5k2"
+];
+
+let newsLoadRequestId = 0;
+
+async function loadNews(user = null) {
+
+  const requestId = ++newsLoadRequestId;
+  const isAdmin = Boolean(
+    user && ADMIN_UIDS.includes(user.uid)
+  );
 
   try {
 
-    const response = await fetch(
-      "https://rambantu-vayu-putrudu-server.onrender.com/public-news",
-      { cache: "no-store" }
-    );
+    const headers = {};
+
+    let endpoint =
+      "https://rambantu-vayu-putrudu-server.onrender.com/public-news";
+
+    if (isAdmin) {
+      const idToken = await user.getIdToken();
+
+      if (requestId !== newsLoadRequestId) return;
+
+      endpoint =
+        "https://rambantu-vayu-putrudu-server.onrender.com/admin-news";
+
+      headers.Authorization = `Bearer ${idToken}`;
+    }
+
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers,
+      cache: "no-store"
+    });
 
     if (!response.ok) {
-      throw new Error("Public News API failed: " + response.status);
+      throw new Error(
+        (isAdmin ? "Admin" : "Public") +
+        " News API failed: " + response.status
+      );
     }
 
     const result = await response.json();
 
     if (!result.success || !Array.isArray(result.news)) {
-      throw new Error("Invalid Public News API response");
+      throw new Error("Invalid News API response");
     }
+
+    // Ignore an older request if Login state changed meanwhile.
+    if (requestId !== newsLoadRequestId) return;
 
     allNews = result.news;
 
     console.log(
-      "Public Documents Count:",
+      isAdmin ? "Admin Documents Count:" : "Public Documents Count:",
       allNews.length
     );
 
     loadFeaturedNews();
-
     loadTrendingNews();
-
     displayNews(allNews);
-
     displaySavedNews();
-
     loadBreakingNews();
 
   } catch (err) {
 
-    console.error(
-      "News Load Error:",
-      err
-    );
+    if (requestId !== newsLoadRequestId) return;
+
+    console.error("News Load Error:", err);
+
+    allNews = [];
+
+    loadFeaturedNews();
+    loadTrendingNews();
+    displayNews([]);
+    displaySavedNews();
+    loadBreakingNews();
 
     const container =
-      document.getElementById(
-        "newsContainer"
-      );
+      document.getElementById("newsContainer");
 
     if (container) {
-
       container.innerHTML =
         "<h3>వార్తలు లోడ్ కాలేదు</h3>";
-
     }
-
   }
-
 }
 
 
@@ -1358,10 +1394,26 @@ window.bottomFunction =
 
 
 // =========================================
-// Start
+// Start - Firebase Authentication
 // =========================================
 
-loadNews();
+onAuthStateChanged(auth, (user) => {
+
+  // Invalidate older requests and clear previously displayed news.
+  newsLoadRequestId++;
+  allNews = [];
+
+  displayNews([]);
+  loadFeaturedNews();
+  loadTrendingNews();
+  displaySavedNews();
+  loadBreakingNews();
+
+  // Admin gets Public + Private.
+  // Everyone else gets Public only.
+  loadNews(user);
+
+});
 /* =========================================
    DARK MODE
 ========================================= */
