@@ -990,8 +990,24 @@ nav a:hover {
 
 }
 
+/* Admin Login - Mobile Header */
+@media (max-width: 600px) {
+    .search-box {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    #savedNewsButton,
+    #adminLoginButton,
+    #darkModeButton {
+        font-size: 14px;
+        padding: 0 10px;
+    }
+}
+
 /* Saved News + Dark Mode — matching button size */
 #savedNewsButton,
+#adminLoginButton,
 #darkModeButton {
     height: 38px;
     min-height: 38px;
@@ -1008,6 +1024,21 @@ nav a:hover {
     background: #222;
     color: #fff;
     cursor: pointer;
+}
+
+#adminLoginButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #c40000;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#adminLoginButton:hover {
+    background: #a30000;
 }
 
 
