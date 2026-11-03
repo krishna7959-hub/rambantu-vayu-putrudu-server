@@ -1619,6 +1619,13 @@ async function loadNews() {
               ✏️ Edit
             </button>
 
+            <!-- private-news-view-button -->
+            <button
+              onclick="window.open('news.html?id=${encodeURIComponent(newsDoc.id)}', '_blank')"
+            >
+              👁️ View News
+            </button>
+
             <button
               onclick="deleteNews('${newsDoc.id}')"
             >
