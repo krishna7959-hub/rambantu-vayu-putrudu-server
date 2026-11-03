@@ -76,7 +76,7 @@ loginBtn.addEventListener(
       // =================================
 
       window.location.href =
-        "admin.html";
+        "index.html";
 
     }
 
