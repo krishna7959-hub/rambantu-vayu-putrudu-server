@@ -76,7 +76,9 @@ loginBtn.addEventListener(
       // =================================
 
       console.log("ADMIN LOGIN SUCCESS - REDIRECTING TO HOMEPAGE");
-      window.location.replace(new URL("index.html", window.location.origin).href);
+      const requestedPage = new URLSearchParams(window.location.search).get("next");
+      const destination = requestedPage === "admin.html" ? "admin.html" : "index.html";
+      window.location.replace(new URL(destination, window.location.origin).href);
 
     }
 

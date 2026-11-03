@@ -34,7 +34,7 @@
 
   onAuthStateChanged(auth, (user) => {
     if (!user || !ADMIN_UIDS.includes(user.uid)) {
-      window.location.replace("login.html");
+      window.location.replace("login.html?next=admin.html");
     }
   });
 </script>
@@ -85,7 +85,7 @@
   document.getElementById("adminLogoutButton").addEventListener("click", async () => {
     try {
       await signOut(auth);
-      window.location.replace("login.html");
+      window.location.replace("login.html?next=admin.html");
     } catch (error) {
       console.error("Admin Logout Error:", error);
       alert("Logout కాలేదు. మళ్లీ ప్రయత్నించండి.");
