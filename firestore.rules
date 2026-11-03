@@ -22,17 +22,27 @@ service cloud.firestore {
 
     match /news/{document} {
 
-      // Public can read news
-      allow read: if true;
+      // Admin can read all news.
+      // Public users can read only Public or legacy news.
+      allow get: if isAdmin()
+        || !('visibility' in resource.data)
+        || resource.data.visibility == 'public';
 
-      // Only Admin can create/delete news and update normal news fields
+      // Only Admin can list all news.
+      allow list: if isAdmin();
+
+      // Only Admin can create/delete news.
       allow create, delete: if isAdmin();
 
-      // Public view counter: only the views field may increase by exactly 1
+      // Public view counter: only Public news can be updated.
       allow update: if
         isAdmin()
         || (
-          request.resource.data.diff(resource.data).affectedKeys()
+          (
+            !('visibility' in resource.data)
+            || resource.data.visibility == 'public'
+          )
+          && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['views'])
           && request.resource.data.get('views', 0) ==
              resource.data.get('views', 0) + 1
@@ -126,8 +136,15 @@ service cloud.firestore {
 
     match /comments/{document} {
 
-      // Anyone can read comments
-      allow read: if true;
+      // Admin can read all comments; others can read only Public News comments
+      allow read: if isAdmin() || (
+        resource.data.newsId is string
+        && exists(/databases/$(database)/documents/news/$(resource.data.newsId))
+        && (
+          !('visibility' in get(/databases/$(database)/documents/news/$(resource.data.newsId)).data)
+          || get(/databases/$(database)/documents/news/$(resource.data.newsId)).data.visibility == 'public'
+        )
+      );
 
 
       // -----------------------------------------
@@ -136,6 +153,12 @@ service cloud.firestore {
 
       allow create: if
         isSignedIn()
+        && exists(/databases/$(database)/documents/news/$(request.resource.data.newsId))
+        && (
+          isAdmin()
+          || !('visibility' in get(/databases/$(database)/documents/news/$(request.resource.data.newsId)).data)
+          || get(/databases/$(database)/documents/news/$(request.resource.data.newsId)).data.visibility == 'public'
+        )
         && request.resource.data.keys().hasOnly([
           "newsId",
           "userId",

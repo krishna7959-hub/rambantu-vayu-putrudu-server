@@ -4,10 +4,21 @@
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "**/BACKUP-*/**",
+      "**/GOLDEN-BACKUP-*/**",
+      "**/*.before-*",
+      "**/*.backup",
+      "**/*.backup.*",
+      "**/*-backup.*"
     ]
   },
   "firestore": {
     "rules": "firestore.rules"
+  },
+  "emulators": {
+    "firestore": {
+      "port": 8080
+    }
   }
 }

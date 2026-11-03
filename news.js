@@ -151,15 +151,63 @@ function updateCommentUI(user) {
 // AUTH STATE
 // =========================================
 
+let authStateReadyResolve;
+
+const authStateReady = new Promise((resolve) => {
+  authStateReadyResolve = resolve;
+});
+
+const ADMIN_UIDS = [
+  "dGNNq3QH2QfP5fe9P5lct5gHw073",
+  "Y0q7rzVUL2Xdanjpce1QqxsLf5k2"
+];
+
+let authResolved = false;
+let domReady = false;
+let articleLoadStarted = false;
+let articlePermissionDenied = false;
+
+function startArticleLoad() {
+  if (!id || articleLoadStarted) return;
+
+  articleLoadStarted = true;
+
+  loadNews().catch((error) => {
+    console.error("NEWS DEBUG: loadNews failed:", error);
+
+    if (newsDetails) {
+      newsDetails.innerHTML = `
+        <h2>News Load కాలేదు.</h2>
+        <p style="color:red;">
+          ${escapeHTML(error.message || "Unknown Error")}
+        </p>
+      `;
+    }
+  });
+}
+
 onAuthStateChanged(
   auth,
   function (user) {
 
     updateCommentUI(user);
 
-    // Login అయిన తర్వాత comments మళ్ళీ render
     if (id) {
       loadComments(id);
+    }
+
+    if (!authResolved) {
+      authResolved = true;
+      authStateReadyResolve(user);
+    } else if (
+      domReady &&
+      user &&
+      ADMIN_UIDS.includes(user.uid) &&
+      articlePermissionDenied
+    ) {
+      articlePermissionDenied = false;
+      articleLoadStarted = false;
+      startArticleLoad();
     }
 
   }
@@ -203,8 +251,24 @@ console.log("NEWS DEBUG: News ID =", id);
     const docRef =
       doc(db, "news", id);
 
-    const docSnap =
-      await getDoc(docRef);
+    let docSnap;
+
+    try {
+      docSnap = await getDoc(docRef);
+    } catch (error) {
+
+      if (error.code === "permission-denied") {
+        articlePermissionDenied = true;
+
+        newsDetails.innerHTML =
+          "<h2>News Not Found</h2>";
+
+        articleLoadStarted = false;
+        return;
+      }
+
+      throw error;
+    }
 
     if (!docSnap.exists()) {
 
@@ -218,12 +282,30 @@ console.log("NEWS DEBUG: News ID =", id);
     const news =
       docSnap.data();
 
-    await updateDoc(
-      docRef,
-      {
-        views: increment(1)
+    const currentUser = auth.currentUser;
+    const isAdmin =
+      currentUser &&
+      ADMIN_UIDS.includes(currentUser.uid);
+
+    // Block Private News for non-admin users.
+    // Legacy news without visibility remains Public.
+    if (news.visibility === "private" && !isAdmin) {
+      newsDetails.innerHTML =
+        "<h2>News Not Found</h2>";
+      return;
+    }
+
+    // Increase views only for Public News.
+    // Article loading should continue even if views update fails.
+    if (news.visibility !== "private") {
+      try {
+        await updateDoc(docRef, {
+          views: increment(1)
+        });
+      } catch (error) {
+        console.error("Views update failed:", error);
       }
-    );
+    }
     // =========================================
     // GOOGLE ARTICLE SEO METADATA
     // =========================================
@@ -276,11 +358,34 @@ console.log("NEWS DEBUG: News ID =", id);
       news.image ||
       window.location.origin + "/share-image.jpg";
 
-    const articlePublished =
-      news.createdAt &&
-      news.createdAt.toDate
-        ? news.createdAt.toDate().toISOString()
-        : null;
+    const articlePublished = (() => {
+      if (
+        news.createdAt &&
+        typeof news.createdAt.toDate === "function"
+      ) {
+        return news.createdAt.toDate().toISOString();
+      }
+
+      if (
+        news.createdAt &&
+        typeof news.createdAt.seconds === "number"
+      ) {
+        return new Date(
+          news.createdAt.seconds * 1000
+        ).toISOString();
+      }
+
+      if (
+        typeof news.createdAt === "string"
+      ) {
+        const date = new Date(news.createdAt);
+        return isNaN(date.getTime())
+          ? null
+          : date.toISOString();
+      }
+
+      return null;
+    })();
 
     document.title =
       articleTitle + " | Rambantu Vayu Putrudu";
@@ -2176,21 +2281,33 @@ async function loadRelatedNews(currentId, currentCategory) {
       return;
     }
 
-    const snap = await getDocs(collection(db, "news"));
+    const response = await fetch(
+      "https://rambantu-vayu-putrudu-server.onrender.com/public-news",
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) {
+      throw new Error("Related News API failed: " + response.status);
+    }
+
+    const result = await response.json();
+
+    if (!result.success || !Array.isArray(result.news)) {
+      throw new Error("Invalid Related News API response");
+    }
+
     const fragment = document.createDocumentFragment();
     let count = 0;
 
-    snap.forEach((newsDoc) => {
-      if (newsDoc.id === currentId || count >= 5) return;
-
-      const n = newsDoc.data();
+    result.news.forEach((n) => {
+      if (n.id === currentId || count >= 5) return;
       const newsCategory = String(n.category || "").trim().toLowerCase();
 
       if (newsCategory !== category) return;
 
       const link = document.createElement("a");
       link.className = "news-card";
-      link.href = `news.html?id=${encodeURIComponent(newsDoc.id)}`;
+      link.href = `news.html?id=${encodeURIComponent(n.id)}`;
       link.style.display = "block";
       link.style.color = "inherit";
       link.style.textDecoration = "none";
@@ -2236,30 +2353,14 @@ async function loadRelatedNews(currentId, currentCategory) {
 // START
 // =========================================
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
 
   console.log("NEWS DEBUG: DOMContentLoaded");
 
-  loadNews().catch(error => {
+  domReady = true;
 
-    console.error(
-      "NEWS DEBUG: loadNews failed:",
-      error
-    );
+  await authStateReady;
 
-    if (newsDetails) {
-
-      newsDetails.innerHTML = `
-        <h2>News Load కాలేదు.</h2>
-        <p style="color:red;">
-          ${escapeHTML(
-            error.message || "Unknown Error"
-          )}
-        </p>
-      `;
-
-    }
-
-  });
+  startArticleLoad();
 
 });

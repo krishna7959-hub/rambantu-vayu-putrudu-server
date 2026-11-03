@@ -16,5 +16,9 @@
     "express": "^5.2.1",
     "firebase-admin": "^14.2.0",
     "onesignal-node": "^3.4.0"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "firebase": "^13.2.0"
   }
 }

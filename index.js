@@ -100,28 +100,27 @@ async function loadNews() {
 
   try {
 
-    const q = query(
-      collection(db, "news"),
-      orderBy("createdAt", "desc")
+    const response = await fetch(
+      "https://rambantu-vayu-putrudu-server.onrender.com/public-news",
+      { cache: "no-store" }
     );
 
-    const snapshot = await getDocs(q);
+    if (!response.ok) {
+      throw new Error("Public News API failed: " + response.status);
+    }
+
+    const result = await response.json();
+
+    if (!result.success || !Array.isArray(result.news)) {
+      throw new Error("Invalid Public News API response");
+    }
+
+    allNews = result.news;
 
     console.log(
-      "Documents Count:",
-      snapshot.size
+      "Public Documents Count:",
+      allNews.length
     );
-
-    allNews = [];
-
-    snapshot.forEach((newsDoc) => {
-
-      allNews.push({
-        id: newsDoc.id,
-        ...newsDoc.data()
-      });
-
-    });
 
     loadFeaturedNews();
 

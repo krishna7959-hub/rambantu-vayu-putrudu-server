@@ -199,6 +199,62 @@ app.post("/send", requireAdmin, async (req, res) => {
 });
 
 /* =========================================
+   PUBLIC NEWS API
+========================================= */
+
+app.get("/public-news", async (req, res) => {
+  try {
+    const snapshot = await getFirestore()
+      .collection("news")
+      .orderBy("createdAt", "desc")
+      .get();
+
+    const publicNews = [];
+
+    snapshot.forEach((doc) => {
+      const news = doc.data();
+
+      // Legacy news without visibility remains Public.
+      if (news.visibility === "private") {
+        return;
+      }
+
+      const safeNews = {
+        id: doc.id,
+        ...news
+      };
+
+      // Convert Firestore Timestamp to frontend-compatible JSON.
+      if (
+        news.createdAt &&
+        typeof news.createdAt.seconds === "number"
+      ) {
+        safeNews.createdAt = {
+          seconds: news.createdAt.seconds,
+          nanoseconds: news.createdAt.nanoseconds || 0
+        };
+      }
+
+      publicNews.push(safeNews);
+    });
+
+    res.set("Cache-Control", "no-store");
+    return res.json({
+      success: true,
+      news: publicNews
+    });
+
+  } catch (error) {
+    console.error("Public News API Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to load public news"
+    });
+  }
+});
+
+/* =========================================
    DYNAMIC SITEMAP
 ========================================= */
 
@@ -264,6 +320,15 @@ app.get("/sitemap.xml", async (req, res) => {
 
     documents.forEach((doc) => {
 
+      // Exclude Private News. Legacy news without visibility remains Public.
+      if (
+        doc.fields &&
+        doc.fields.visibility &&
+        doc.fields.visibility.stringValue === "private"
+      ) {
+        return;
+      }
+
       const documentName = doc.name || "";
 
       const newsId =
@@ -314,6 +379,7 @@ ${urls}
 </urlset>`;
 
     res.set("Content-Type", "application/xml");
+    res.set("Cache-Control", "no-store");
 
     res.send(sitemap);
 
@@ -402,16 +468,23 @@ app.post("/view", async (req, res) => {
 
     const newsSnap = await newsRef.get();
 
-    if (!newsSnap.exists) {
-      return res.status(404).json({
-        success: false,
-        message: "News not found"
-      });
-    }
+   if (!newsSnap.exists) {
+  return res.status(404).json({
+    success: false,
+    message: "News not found"
+  });
+}
 
-    await newsRef.update({
-      views: FieldValue.increment(1)
-    });
+if (newsSnap.data().visibility === "private") {
+  return res.status(404).json({
+    success: false,
+    message: "News not found"
+  });
+}
+
+await newsRef.update({
+  views: FieldValue.increment(1)
+});
 
     res.json({
       success: true
@@ -499,6 +572,13 @@ app.post("/like", async (req, res) => {
     const newsSnap = await newsRef.get();
 
     if (!newsSnap.exists) {
+      return res.status(404).json({
+        success: false,
+        message: "News not found"
+      });
+    }
+
+    if (newsSnap.data().visibility === "private") {
       return res.status(404).json({
         success: false,
         message: "News not found"

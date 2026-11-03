@@ -1038,6 +1038,11 @@ if (publishBtn) {
           .value
           .trim();
 
+      const visibility =
+        document.getElementById("newsVisibility")?.value === "private"
+          ? "private"
+          : "public";
+
 
       const imageFile =
         document
@@ -1228,6 +1233,9 @@ if (publishBtn) {
               authorName:
                 authorName,
 
+              visibility:
+                visibility,
+
               image:
                 imageURL ||
                 oldData.image ||
@@ -1284,6 +1292,9 @@ if (publishBtn) {
               authorName:
                 authorName,
 
+              visibility:
+                visibility,
+
               image:
                 imageURL,
 
@@ -1299,85 +1310,55 @@ if (publishBtn) {
           );
 
 
-          alert(
-            "వార్త విజయవంతంగా Publish అయింది!"
-          );
-
-
           // ===============================
           // SEND NOTIFICATION
           // ===============================
 
-          const user = auth.currentUser;
+          if (visibility === "public") {
+            try {
+              const user = auth.currentUser;
 
-          if (!user) {
-            throw new Error("Admin authentication required");
-          }
-
-          user.getIdToken(true).then(idToken => {
-
-            return fetch(
-              "https://rambantu-vayu-putrudu-server.onrender.com/send",
-              {
-
-                method:
-                  "POST",
-
-                headers:
-                  {
-                    "Content-Type":
-                      "application/json",
-                    "Authorization":
-                      `Bearer ${idToken}`
-                  },
-
-                body:
-                  JSON.stringify({
-
-                    title:
-                      title,
-
-                    message:
-                      details.substring(
-                        0,
-                        100
-                      ),
-
-                    url:
-                      "https://rambantu-vayu-putrudu.web.app"
-
-                  })
-
+              if (!user) {
+                throw new Error("Admin authentication required");
               }
-            );
 
-          })
-          .then(
-            async response => {
+              const idToken = await user.getIdToken(true);
 
-              console.log(
-                "Notification Status:",
-                response.status
+              const response = await fetch(
+                "https://rambantu-vayu-putrudu-server.onrender.com/send",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${idToken}`
+                  },
+                  body: JSON.stringify({
+                    title: title,
+                    message: details.substring(0, 100),
+                    url: "https://rambantu-vayu-putrudu.web.app"
+                  })
+                }
               );
 
-              console.log(
-                "Notification Response:",
-                await response.text()
-              );
+              const result = await response.json();
 
+              console.log("Notification Status:", response.status);
+              console.log("Notification Response:", result);
+
+              if (!response.ok || result.success !== true) {
+                throw new Error(result.message || "Notification failed");
+              }
+
+              alert("వార్త Publish అయింది. Notification విజయవంతంగా పంపబడింది.");
+
+            } catch (error) {
+              console.error("Notification Error:", error);
+              alert("వార్త Publish అయింది. కానీ Notification పంపడంలో సమస్య వచ్చింది.");
             }
-          )
 
-          .catch(
-            error => {
-
-              console.error(
-                "Notification Error:",
-                error
-              );
-
-            }
-          );
+          } else {
+            alert("Private వార్త విజయవంతంగా సేవ్ అయింది. Notification పంపలేదు.");
+          }
 
         }
 
@@ -1405,6 +1386,7 @@ if (publishBtn) {
           .getElementById("authorName")
           .value = "";
 
+        document.getElementById("newsVisibility").value = "public";
 
         document
           .getElementById(
@@ -1617,6 +1599,20 @@ async function loadNews() {
               👁️ Views: ${news.views || 0}
             </p>
 
+            <p>
+              స్థితి: ${
+                news.visibility === "private"
+                  ? "🔒 Private"
+                  : "🌐 Public"
+              }
+            </p>
+
+            <button
+              onclick="toggleNewsVisibility('${newsDoc.id}', '${news.visibility === "private" ? "private" : "public"}')"
+            >
+              ${news.visibility === "private" ? "🌐 Make Public" : "🔒 Make Private"}
+            </button>
+
             <button
               onclick="editNews('${newsDoc.id}')"
             >
@@ -1713,6 +1709,50 @@ window.deleteNews =
 
     }
 
+  };
+
+
+// =========================================
+// TOGGLE NEWS VISIBILITY
+// =========================================
+
+window.toggleNewsVisibility =
+  async function (id, currentVisibility) {
+
+    const nextVisibility =
+      currentVisibility === "private"
+        ? "public"
+        : "private";
+
+    const confirmMessage =
+      nextVisibility === "private"
+        ? "ఈ వార్తను Private చేయాలా?"
+        : "ఈ వార్తను Public చేయాలా?";
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      await updateDoc(
+        doc(db, "news", id),
+        {
+          visibility: nextVisibility
+        }
+      );
+
+      alert(
+        nextVisibility === "private"
+          ? "వార్త Private అయింది."
+          : "వార్త Public అయింది."
+      );
+
+      await loadNews();
+
+    } catch (error) {
+      console.error("Toggle Visibility Error:", error);
+      alert("Visibility మార్చలేకపోయాము.");
+    }
   };
 
 
@@ -1830,6 +1870,9 @@ window.editNews =
         .value =
         news.authorName ||
         "";
+
+      document.getElementById("newsVisibility").value =
+        news.visibility === "private" ? "private" : "public";
 
 
       // ===================================

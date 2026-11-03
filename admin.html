@@ -73,7 +73,25 @@
   >
     📊 Analytics
   </button>
+  <button id="adminLogoutButton" type="button">
+    🚪 Logout
+  </button>
 </div>
+
+<script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { auth } from "./firebase.js";
+
+  document.getElementById("adminLogoutButton").addEventListener("click", async () => {
+    try {
+      await signOut(auth);
+      window.location.href = "login.html";
+    } catch (error) {
+      console.error("Admin Logout Error:", error);
+      alert("Logout కాలేదు. మళ్లీ ప్రయత్నించండి.");
+    }
+  });
+</script>
 
 <div class="container">
 <!-- Floating Comments Button -->
@@ -205,6 +223,11 @@
 
 </select>
 
+<label for="newsVisibility">🔒 News Visibility</label>
+<select id="newsVisibility">
+  <option value="public" selected>🌐 Public — అందరికీ కనిపిస్తుంది</option>
+  <option value="private">🔒 Private — Adminకు మాత్రమే కనిపిస్తుంది</option>
+</select>
 
 <input
   type="file"
