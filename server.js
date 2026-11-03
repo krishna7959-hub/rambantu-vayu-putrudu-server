@@ -311,56 +311,19 @@ app.get("/admin-news", requireAdmin, async (req, res) => {
 ========================================= */
 
 app.get("/sitemap.xml", async (req, res) => {
-
   try {
-
-    const projectId = "rambantu-vayu-putrudu";
-
-    const apiKey =
-      process.env.FIREBASE_API_KEY;
-
-    const firestoreURL =
-      `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/news?key=${apiKey}`;
-
     console.log("Creating dynamic sitemap...");
 
-    let pageToken = "";
-    const documents = [];
+    const snapshot = await getFirestore()
+      .collection("news")
+      .orderBy("createdAt", "desc")
+      .get();
 
-    do {
-
-      const url =
-        pageToken
-          ? `${firestoreURL}&pageToken=${encodeURIComponent(pageToken)}`
-          : firestoreURL;
-
-      const response = await fetch(url);
-
-      if (!response.ok) {
-
-        throw new Error(
-          `Firestore request failed: ${response.status}`
-        );
-
-      }
-
-      const data = await response.json();
-
-      if (data.documents) {
-        documents.push(...data.documents);
-      }
-
-      pageToken = data.nextPageToken || "";
-
-    } while (pageToken);
-
-    const siteURL =
-      "https://rambantu-vayu-putrudu.web.app";
+    const siteURL = "https://rambantu-vayu-putrudu.web.app";
 
     let urls = "";
 
-    /* Homepage */
-
+    // Homepage
     urls += `
     <url>
       <loc>${siteURL}/</loc>
@@ -368,89 +331,63 @@ app.get("/sitemap.xml", async (req, res) => {
       <priority>1.0</priority>
     </url>`;
 
-    /* News Articles */
+    // Public News Articles
+    let publicNewsCount = 0;
 
-    documents.forEach((doc) => {
+    snapshot.forEach((doc) => {
+      const news = doc.data();
 
-      // Exclude Private News. Legacy news without visibility remains Public.
-      if (
-        doc.fields &&
-        doc.fields.visibility &&
-        doc.fields.visibility.stringValue === "private"
-      ) {
-        return;
-      }
+      // Exclude private news. Legacy news remains public.
+      if (news.visibility === "private") return;
 
-      const documentName = doc.name || "";
-
-      const newsId =
-        documentName.split("/").pop();
-
+      const newsId = doc.id;
       if (!newsId) return;
 
       let lastmod = "";
 
-      if (
-        doc.fields &&
-        doc.fields.createdAt &&
-        doc.fields.createdAt.timestampValue
-      ) {
+      if (news.createdAt) {
+        let date;
 
-        lastmod =
-          doc.fields.createdAt.timestampValue
-            .split("T")[0];
+        if (typeof news.createdAt.toDate === "function") {
+          date = news.createdAt.toDate();
+        } else if (typeof news.createdAt.seconds === "number") {
+          date = new Date(news.createdAt.seconds * 1000);
+        }
 
+        if (date && !isNaN(date.getTime())) {
+          lastmod = date.toISOString().split("T")[0];
+        }
       }
 
       urls += `
       <url>
-
         <loc>${siteURL}/news.html?id=${encodeURIComponent(newsId)}</loc>
-
-        ${
-          lastmod
-            ? `<lastmod>${lastmod}</lastmod>`
-            : ""
-        }
-
+        ${lastmod ? `<lastmod>${lastmod}</lastmod>` : ""}
         <changefreq>weekly</changefreq>
-
         <priority>0.8</priority>
-
       </url>`;
 
+      publicNewsCount++;
     });
 
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-
-<urlset
-  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls}
-
 </urlset>`;
 
     res.set("Content-Type", "application/xml");
     res.set("Cache-Control", "no-store");
-
     res.send(sitemap);
 
     console.log(
-      `Sitemap created successfully. News count: ${documents.length}`
+      `Sitemap created successfully. Public news count: ${publicNewsCount}`
     );
 
   } catch (error) {
-
     console.error("Sitemap Error:", error);
-
-    res.status(500).send(
-      "Sitemap generation failed"
-    );
-
+    res.status(500).send("Sitemap generation failed");
   }
-
 });
-
 
 /* =========================================
    ROBOTS.TXT
