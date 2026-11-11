@@ -153,6 +153,7 @@ app.post("/send", requireAdmin, async (req, res) => {
           app_id: "ca312fa3-511f-4b36-ab0e-8d774ab70cfc",
           target_channel: "push",
           included_segments: ["Active Subscriptions"],
+          web_push_topic: `rvp-news-${Date.now()}`,
 
           headings: {
             en: title
