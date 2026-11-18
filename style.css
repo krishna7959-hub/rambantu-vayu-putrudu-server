@@ -1157,8 +1157,10 @@ nav a.cricket-nav-link {
   background: linear-gradient(
     90deg,
     #0057B8 0%,
-    #0057B8 50%,
-    #FF9933 50%,
+    #0057B8 35%,
+    #3B70A5 45%,
+    #B98255 55%,
+    #FF9933 65%,
     #FF9933 100%
   );
   color: #ffffff;
@@ -1173,8 +1175,10 @@ nav a.cricket-nav-link:hover {
   background: linear-gradient(
     90deg,
     #00428d 0%,
-    #00428d 50%,
-    #e98218 50%,
+    #00428d 35%,
+    #426B91 45%,
+    #A9784E 55%,
+    #e98218 65%,
     #e98218 100%
   );
   color: #ffffff;
