@@ -1151,3 +1151,43 @@ body.dark-mode .hero p {
   cursor: not-allowed;
 }
 
+
+/* RVP CRICKET NAVIGATION BUTTON */
+nav a.cricket-nav-link {
+  background: linear-gradient(
+    90deg,
+    #0057B8 0%,
+    #0057B8 50%,
+    #FF9933 50%,
+    #FF9933 100%
+  );
+  color: #ffffff;
+  font-weight: 800;
+  border-radius: 6px;
+  margin: 5px 4px;
+  box-shadow: 0 2px 8px rgba(0, 87, 184, .25);
+  animation: cricketGlow 2s ease-in-out infinite;
+}
+
+nav a.cricket-nav-link:hover {
+  background: linear-gradient(
+    90deg,
+    #00428d 0%,
+    #00428d 50%,
+    #e98218 50%,
+    #e98218 100%
+  );
+  color: #ffffff;
+}
+
+@keyframes cricketGlow {
+  50% {
+    box-shadow: 0 2px 13px rgba(0, 87, 184, .45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  nav a.cricket-nav-link {
+    animation: none;
+  }
+}

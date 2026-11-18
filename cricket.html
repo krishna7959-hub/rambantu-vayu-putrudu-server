@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>RVP Web Cricket | Live Scores & Match Results</title>
+  <meta name="description" content="RVP Web Cricket - Cricket match results, full scorecards and match updates in Telugu.">
+
+  <meta name="theme-color" content="#b90000">
+  <link rel="canonical" href="https://rambantu-vayu-putrudu.web.app/cricket.html">
+
+  <link rel="icon" href="/icon-192.png">
+  <link rel="stylesheet" href="cricket.css">
+
+  <script src="cricket.js" defer></script>
+</head>
+
+<body>
+
+  <header class="cricket-header">
+    <a class="cricket-brand" href="index.html">
+      <span class="cricket-logo">🏏</span>
+      <span>
+        <strong>RVP WEB CRICKET</strong>
+        <small>రాంబంటు వాయు పుత్రుడు</small>
+      </span>
+    </a>
+
+    <a class="home-link" href="index.html">← RVP News</a>
+  </header>
+
+  <main class="cricket-main">
+
+    <section class="cricket-welcome">
+      <span class="welcome-label">RVP SPORTS DESK</span>
+      <h1>🏏 క్రికెట్ ప్రపంచం</h1>
+      <p>మ్యాచ్ ఫలితాలు, పూర్తి స్కోర్‌కార్డులు మరియు క్రికెట్ సమాచారం</p>
+    </section>
+
+    <nav class="cricket-tabs" aria-label="Cricket sections">
+      <button class="cricket-tab" type="button"
+        data-tab="live" aria-selected="false">
+        🔴 LIVE
+      </button>
+
+      <button class="cricket-tab active" type="button"
+        data-tab="results" aria-selected="true">
+        🏆 RESULTS
+      </button>
+
+      <button class="cricket-tab" type="button"
+        data-tab="fixtures" aria-selected="false">
+        📅 FIXTURES
+      </button>
+    </nav>
+
+    <section class="cricket-panel" id="livePanel" hidden>
+      <div class="section-heading">
+        <h2>🔴 Live Matches</h2>
+      </div>
+      <div class="status-message" id="liveMessage">
+        Live Score సేవను సిద్ధం చేస్తున్నాం. ధృవీకరించిన Live డేటా అందుబాటులోకి వచ్చినప్పుడు ఇక్కడ చూపిస్తాం.
+      </div>
+    </section>
+
+    <section class="cricket-panel" id="resultsPanel">
+      <div class="section-heading">
+        <h2>🏆 మ్యాచ్ ఫలితాలు</h2>
+        <button type="button" id="refreshResults" class="refresh-button">
+          ↻ Refresh
+        </button>
+      </div>
+
+      <div id="resultsStatus" class="status-message" aria-live="polite">
+        మ్యాచ్ ఫలితాలను లోడ్ చేస్తున్నాం...
+      </div>
+
+      <div id="resultsList" class="match-list"></div>
+    </section>
+
+    <section class="cricket-panel" id="fixturesPanel" hidden>
+      <div class="section-heading">
+        <h2>📅 Upcoming Fixtures</h2>
+      </div>
+      <div class="status-message" id="fixturesMessage">
+        Upcoming Fixtures కోసం ధృవీకరించిన ఉచిత డేటా సేవను సిద్ధం చేస్తున్నాం.
+      </div>
+    </section>
+
+    <section class="scorecard-section" id="scorecardSection" hidden>
+      <div class="scorecard-heading">
+        <button type="button" id="backToResults" class="back-button">
+          ← మ్యాచ్‌లకు తిరిగి వెళ్లండి
+        </button>
+        <h2>🏏 Match Centre</h2>
+      </div>
+
+      <div id="scorecardStatus" class="status-message" aria-live="polite">
+        Scorecard లోడ్ అవుతోంది...
+      </div>
+
+      <div id="scorecardContent"></div>
+    </section>
+
+  </main>
+
+  <footer class="cricket-footer">
+    <strong>RVP WEB CRICKET</strong>
+    <p>© Rambantu Vayu Putrudu. All rights reserved.</p>
+    <a href="index.html">RVP News Homepage</a>
+  </footer>
+
+</body>
+</html>
