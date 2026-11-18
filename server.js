@@ -608,6 +608,168 @@ app.post("/like", async (req, res) => {
 });
 
 
+
+/* =========================================
+   CRICKET DATABASE - YESTERDAY RESULTS
+========================================= */
+
+let cricketResultsCache = {
+  data: null,
+  expiresAt: 0
+};
+
+app.get("/cricket/results", async (req, res) => {
+  try {
+    const now = Date.now();
+
+    if (cricketResultsCache.data && now < cricketResultsCache.expiresAt) {
+      return res.json({
+        success: true,
+        cached: true,
+        data: cricketResultsCache.data
+      });
+    }
+
+    const apiKey = process.env.CRICKET_DATABASE_API_KEY;
+
+    if (!apiKey) {
+      return res.status(503).json({
+        success: false,
+        message: "Cricket service is not configured"
+      });
+    }
+
+    const response = await fetch(
+      "https://api.cricketdatabase.com/v1/results/yesterday",
+      {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Accept": "application/json"
+        },
+        signal: AbortSignal.timeout(15000)
+      }
+    );
+
+    if (!response.ok) {
+      console.error("Cricket Results API returned status:", response.status);
+
+      return res.status(502).json({
+        success: false,
+        message: "Cricket results are temporarily unavailable"
+      });
+    }
+
+    const result = await response.json();
+
+    cricketResultsCache = {
+      data: result,
+      expiresAt: now + (6 * 60 * 60 * 1000)
+    };
+
+    return res.json({
+      success: true,
+      cached: false,
+      data: result
+    });
+
+  } catch (error) {
+    console.error("Cricket Results request failed");
+
+    return res.status(502).json({
+      success: false,
+      message: "Could not load cricket results"
+    });
+  }
+});
+
+
+
+/* =========================================
+   CRICKET DATABASE - FULL SCORECARD
+========================================= */
+
+const cricketScorecardCache = new Map();
+
+app.get("/cricket/scorecard/:matchId", async (req, res) => {
+  try {
+    const matchId = req.params.matchId;
+
+    if (
+      typeof matchId !== "string" ||
+      !/^[a-zA-Z0-9-]{1,180}$/.test(matchId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid match ID"
+      });
+    }
+
+    const now = Date.now();
+    const cached = cricketScorecardCache.get(matchId);
+
+    if (cached && now < cached.expiresAt) {
+      return res.json({
+        success: true,
+        cached: true,
+        data: cached.data
+      });
+    }
+
+    const apiKey = process.env.CRICKET_DATABASE_API_KEY;
+
+    if (!apiKey) {
+      return res.status(503).json({
+        success: false,
+        message: "Cricket service is not configured"
+      });
+    }
+
+    const response = await fetch(
+      `https://api.cricketdatabase.com/v1/matches/${encodeURIComponent(matchId)}/scorecard`,
+      {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Accept": "application/json"
+        },
+        signal: AbortSignal.timeout(15000)
+      }
+    );
+
+    if (!response.ok) {
+      console.error("Cricket Scorecard API returned status:", response.status);
+
+      return res.status(502).json({
+        success: false,
+        message: "Scorecard is temporarily unavailable"
+      });
+    }
+
+    const result = await response.json();
+
+    cricketScorecardCache.set(matchId, {
+      data: result,
+      expiresAt: now + (24 * 60 * 60 * 1000)
+    });
+
+    return res.json({
+      success: true,
+      cached: false,
+      data: result
+    });
+
+  } catch (error) {
+    console.error("Cricket Scorecard request failed");
+
+    return res.status(502).json({
+      success: false,
+      message: "Could not load cricket scorecard"
+    });
+  }
+});
+
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
