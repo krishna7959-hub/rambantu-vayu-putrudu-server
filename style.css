@@ -1186,18 +1186,24 @@ nav a.cricket-nav-link:hover {
 
 @keyframes cricketGlow {
   0%, 100% {
+    filter:
+      drop-shadow(0 0 3px rgba(0, 119, 255, .75))
+      drop-shadow(0 0 3px rgba(255, 153, 51, .75));
     box-shadow:
-      inset 5px 0 9px rgba(0, 119, 255, .20),
-      inset -5px 0 9px rgba(255, 153, 51, .20),
-      0 0 5px rgba(0, 119, 255, .25),
-      0 0 5px rgba(255, 153, 51, .25);
+      inset 7px 0 12px rgba(0, 153, 255, .65),
+      inset -7px 0 12px rgba(255, 153, 51, .65),
+      0 0 8px rgba(0, 119, 255, .65),
+      0 0 8px rgba(255, 153, 51, .65);
   }
   50% {
+    filter:
+      drop-shadow(0 0 8px rgba(0, 153, 255, 1))
+      drop-shadow(0 0 8px rgba(255, 153, 51, 1));
     box-shadow:
-      inset 9px 0 16px rgba(0, 153, 255, .85),
-      inset -9px 0 16px rgba(255, 153, 51, .85),
-      0 0 13px rgba(0, 119, 255, .95),
-      0 0 13px rgba(255, 153, 51, .95);
+      inset 10px 0 18px rgba(0, 174, 255, .95),
+      inset -10px 0 18px rgba(255, 153, 51, .95),
+      0 0 14px rgba(0, 119, 255, .95),
+      0 0 14px rgba(255, 153, 51, .95);
   }
 }
 
