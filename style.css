@@ -1212,3 +1212,13 @@ nav a.cricket-nav-link:hover {
     animation: none;
   }
 }
+
+/* SEO News Article Links */
+.news-content h3 a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.news-content h3 a:hover {
+    text-decoration: underline;
+}

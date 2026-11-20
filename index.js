@@ -700,7 +700,9 @@ function loadFeaturedNews() {
       <div class="news-content">
 
         <h3>
-          ${news.title || ""}
+          <a href="news.html?id=${encodeURIComponent(news.id)}">
+            ${news.title || ""}
+          </a>
         </h3>
 
         <p>
@@ -775,7 +777,9 @@ function loadTrendingNews() {
         </span>
 
         <h3>
-          ${news.title || ""}
+          <a href="news.html?id=${encodeURIComponent(news.id)}">
+            ${news.title || ""}
+          </a>
         </h3>
 
       </div>
@@ -870,7 +874,9 @@ function displayNews(newsList) {
           </span>
 
           <h3>
-            ${news.title || ""}
+            <a href="news.html?id=${encodeURIComponent(news.id)}">
+              ${news.title || ""}
+            </a>
           </h3>
 
           <p>
