@@ -1154,6 +1154,8 @@ body.dark-mode .hero p {
 
 /* RVP CRICKET NAVIGATION BUTTON */
 nav a.cricket-nav-link {
+  position: relative;
+  isolation: isolate;
   background: linear-gradient(
     90deg,
     #0057B8 0%,
@@ -1171,6 +1173,28 @@ nav a.cricket-nav-link {
   animation: cricketGlow 2s ease-in-out infinite;
 }
 
+nav a.cricket-nav-link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  border-radius: inherit;
+  background: conic-gradient(
+    transparent 0deg 270deg,
+    #0057B8 300deg,
+    #00AFFF 320deg,
+    #FF9933 340deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: cricketBorderSpin 3s linear infinite;
+  pointer-events: none;
+}
+
 nav a.cricket-nav-link:hover {
   background: linear-gradient(
     90deg,
@@ -1184,31 +1208,21 @@ nav a.cricket-nav-link:hover {
   color: #ffffff;
 }
 
-@keyframes cricketGlow {
-  0%, 100% {
-    filter:
-      drop-shadow(0 0 3px rgba(0, 119, 255, .75))
-      drop-shadow(0 0 3px rgba(255, 153, 51, .75));
-    box-shadow:
-      inset 7px 0 12px rgba(0, 153, 255, .65),
-      inset -7px 0 12px rgba(255, 153, 51, .65),
-      0 0 8px rgba(0, 119, 255, .65),
-      0 0 8px rgba(255, 153, 51, .65);
+@keyframes cricketBorderSpin {
+  to {
+    transform: rotate(360deg);
   }
+}
+
+@keyframes cricketGlow {
   50% {
-    filter:
-      drop-shadow(0 0 8px rgba(0, 153, 255, 1))
-      drop-shadow(0 0 8px rgba(255, 153, 51, 1));
-    box-shadow:
-      inset 10px 0 18px rgba(0, 174, 255, .95),
-      inset -10px 0 18px rgba(255, 153, 51, .95),
-      0 0 14px rgba(0, 119, 255, .95),
-      0 0 14px rgba(255, 153, 51, .95);
+    box-shadow: 0 2px 13px rgba(0, 87, 184, .45);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  nav a.cricket-nav-link {
+  nav a.cricket-nav-link,
+  nav a.cricket-nav-link::before {
     animation: none;
   }
 }
