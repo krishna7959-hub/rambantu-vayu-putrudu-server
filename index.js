@@ -986,41 +986,44 @@ window.shareNews = async function(newsId) {
 // Breaking News
 // =========================================
 
+let breakingExpiryTimer = null;
+
 async function loadBreakingNews() {
 
   const breakingElement =
-    document.getElementById(
-      "breakingText"
-    );
+    document.getElementById("breakingText");
 
   if (!breakingElement) {
     return;
   }
 
+  if (breakingExpiryTimer !== null) {
+    clearTimeout(breakingExpiryTimer);
+    breakingExpiryTimer = null;
+  }
+
   let manualBreaking = "";
+  let expiresAt = 0;
 
   try {
 
     const breakingDoc =
       await getDoc(
-        doc(
-          db,
-          "settings",
-          "breaking"
-        )
+        doc(db, "settings", "breaking")
       );
 
     if (breakingDoc.exists()) {
 
-      const data =
-        breakingDoc.data();
+      const data = breakingDoc.data();
+
+      expiresAt = Number(data.expiresAt || 0);
 
       if (
         data.text &&
-        data.text.trim() !== ""
+        data.text.trim() !== "" &&
+        expiresAt > Date.now()
       ) {
-        manualBreaking =
-          data.text.trim();
+        manualBreaking = data.text.trim();
       }
 
     }
@@ -1034,10 +1037,21 @@ async function loadBreakingNews() {
 
   }
 
-  // =======================================
-  // Manual Breaking + Latest 5 News
-  // =======================================
+  // Schedule automatic refresh when manual Breaking News expires
+  if (manualBreaking && expiresAt > Date.now()) {
 
+    const remainingTime =
+      expiresAt - Date.now() + 1000;
+
+    breakingExpiryTimer =
+      setTimeout(
+        () => loadBreakingNews(),
+        remainingTime
+      );
+
+  }
+
+  // Manual Breaking + Latest 5 News
   breakingElement.innerHTML = "";
 
   const items = [];
@@ -1055,7 +1069,7 @@ async function loadBreakingNews() {
 
   }
 
-  // Latest 5 News
+  // Latest 5 News (unchanged)
   const latestNews =
     allNews.slice(0, 5);
 
@@ -1082,10 +1096,7 @@ async function loadBreakingNews() {
 
   });
 
-  // =======================================
   // Add all items to ticker
-  // =======================================
-
   items.forEach((item, index) => {
 
     if (index > 0) {
@@ -1096,9 +1107,7 @@ async function loadBreakingNews() {
       separator.innerHTML =
         "&nbsp;&nbsp;&nbsp;&nbsp;";
 
-      breakingElement.appendChild(
-        separator
-      );
+      breakingElement.appendChild(separator);
 
     }
 

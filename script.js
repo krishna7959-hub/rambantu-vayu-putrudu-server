@@ -807,7 +807,20 @@ if (
       }
 
 
+      const expiryHours = Number(
+        document.getElementById("breakingExpiry")?.value || 24
+      );
+
+      if (![24, 48].includes(expiryHours)) {
+        alert("24 లేదా 48 గంటలు ఎంచుకోండి.");
+        return;
+      }
+
       try {
+
+        const createdAt = Date.now();
+        const expiresAt =
+          createdAt + expiryHours * 60 * 60 * 1000;
 
         await setDoc(
           doc(
@@ -816,10 +829,10 @@ if (
             "breaking"
           ),
           {
-
-            text:
-              text
-
+            text: text,
+            createdAt: createdAt,
+            expiresAt: expiresAt,
+            expiryHours: expiryHours
           }
         );
 
