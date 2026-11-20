@@ -1152,65 +1152,52 @@ body.dark-mode .hero p {
 }
 
 
+@property --cricket-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
 /* RVP CRICKET NAVIGATION BUTTON */
 nav a.cricket-nav-link {
+  --cricket-angle: 0deg;
   position: relative;
-  isolation: isolate;
-  background: linear-gradient(
-    90deg,
-    #0057B8 0%,
-    #0057B8 35%,
-    #3B70A5 45%,
-    #B98255 55%,
-    #FF9933 65%,
-    #FF9933 100%
-  );
+  background:
+    linear-gradient(
+      90deg,
+      #0057B8 0%,
+      #0057B8 35%,
+      #3B70A5 45%,
+      #B98255 55%,
+      #FF9933 65%,
+      #FF9933 100%
+    ) padding-box,
+    conic-gradient(
+      from var(--cricket-angle),
+      #0057B8 0deg,
+      #00AFFF 35deg,
+      transparent 75deg 285deg,
+      #FF9933 320deg,
+      #0057B8 360deg
+    ) border-box;
+  border: 2px solid transparent;
   color: #ffffff;
   font-weight: 800;
   border-radius: 6px;
   margin: 5px 4px;
   box-shadow: 0 2px 8px rgba(0, 87, 184, .25);
-  animation: cricketGlow 2s ease-in-out infinite;
-}
-
-nav a.cricket-nav-link::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  padding: 2px;
-  border-radius: inherit;
-  background: conic-gradient(
-    transparent 0deg 270deg,
-    #0057B8 300deg,
-    #00AFFF 320deg,
-    #FF9933 340deg,
-    transparent 360deg
-  );
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: cricketBorderSpin 3s linear infinite;
-  pointer-events: none;
+  animation:
+    cricketBorderTurn 3s linear infinite,
+    cricketGlow 2s ease-in-out infinite;
 }
 
 nav a.cricket-nav-link:hover {
-  background: linear-gradient(
-    90deg,
-    #00428d 0%,
-    #00428d 35%,
-    #426B91 45%,
-    #A9784E 55%,
-    #e98218 65%,
-    #e98218 100%
-  );
   color: #ffffff;
 }
 
-@keyframes cricketBorderSpin {
+@keyframes cricketBorderTurn {
   to {
-    transform: rotate(360deg);
+    --cricket-angle: 360deg;
   }
 }
 
@@ -1221,8 +1208,7 @@ nav a.cricket-nav-link:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  nav a.cricket-nav-link,
-  nav a.cricket-nav-link::before {
+  nav a.cricket-nav-link {
     animation: none;
   }
 }
