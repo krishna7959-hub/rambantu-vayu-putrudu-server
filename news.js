@@ -166,6 +166,7 @@ let authResolved = false;
 let domReady = false;
 let articleLoadStarted = false;
 let articlePermissionDenied = false;
+let articleAdminRetryAttempted = false;
 
 function startArticleLoad() {
   if (!id || articleLoadStarted) return;
@@ -199,13 +200,17 @@ onAuthStateChanged(
     if (!authResolved) {
       authResolved = true;
       authStateReadyResolve(user);
-    } else if (
+    }
+
+    if (
       domReady &&
       user &&
       ADMIN_UIDS.includes(user.uid) &&
-      articlePermissionDenied
+      articlePermissionDenied &&
+      !articleAdminRetryAttempted
     ) {
       articlePermissionDenied = false;
+      articleAdminRetryAttempted = true;
       articleLoadStarted = false;
       startArticleLoad();
     }
@@ -258,12 +263,27 @@ console.log("NEWS DEBUG: News ID =", id);
     } catch (error) {
 
       if (error.code === "permission-denied") {
+
         articlePermissionDenied = true;
+        articleLoadStarted = false;
+
+        const currentUser = auth.currentUser;
+
+        if (
+          authResolved &&
+          currentUser &&
+          ADMIN_UIDS.includes(currentUser.uid) &&
+          !articleAdminRetryAttempted
+        ) {
+          articlePermissionDenied = false;
+          articleAdminRetryAttempted = true;
+          startArticleLoad();
+          return;
+        }
 
         newsDetails.innerHTML =
           "<h2>News Not Found</h2>";
 
-        articleLoadStarted = false;
         return;
       }
 
@@ -620,7 +640,7 @@ console.log("NEWS DEBUG: News ID =", id);
             news.createdAt.seconds
               ? new Date(
                   news.createdAt.seconds * 1000
-                ).toLocaleString("en-IN")
+                ).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })
               : ""
           }
 
@@ -2353,13 +2373,11 @@ async function loadRelatedNews(currentId, currentCategory) {
 // START
 // =========================================
 
-window.addEventListener("DOMContentLoaded", async () => {
+window.addEventListener("DOMContentLoaded", () => {
 
   console.log("NEWS DEBUG: DOMContentLoaded");
 
   domReady = true;
-
-  await authStateReady;
 
   startArticleLoad();
 
