@@ -895,6 +895,122 @@ app.get("/api/cricket/live", async (req, res) => {
   }
 });
 
+
+/* DATA SPORTS API - CRICKET MATCH SCORECARD */
+
+const dataSportsScorecardCache = new Map();
+const dataSportsScorecardInFlight = new Map();
+
+app.get("/api/cricket/scorecard/:matchId", async (req, res) => {
+  try {
+    const matchId = String(req.params.matchId || "");
+
+    if (!/^\d{1,20}$/.test(matchId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid cricket match ID"
+      });
+    }
+
+    const now = Date.now();
+    const cached = dataSportsScorecardCache.get(matchId);
+
+    if (cached && now < cached.expiresAt) {
+      return res.json({
+        success: true,
+        cached: true,
+        data: cached.data
+      });
+    }
+
+    if (dataSportsScorecardInFlight.has(matchId)) {
+      const result = await dataSportsScorecardInFlight.get(matchId);
+      return res.json({
+        success: true,
+        cached: true,
+        data: result
+      });
+    }
+
+    const apiKey = process.env.DATASPORTSAPI_API_KEY;
+
+    if (!apiKey) {
+      return res.status(503).json({
+        success: false,
+        message: "Cricket service is not configured"
+      });
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    if (dataSportsDailyUsage.day !== today) {
+      dataSportsDailyUsage = { day: today, calls: 0 };
+    }
+
+    const dailyLimit = Math.min(
+      950,
+      Math.max(1, Number(process.env.DATASPORTSAPI_DAILY_LIMIT) || 90)
+    );
+
+    if (dataSportsDailyUsage.calls >= dailyLimit) {
+      return res.status(429).json({
+        success: false,
+        message: "Daily cricket API request limit reached"
+      });
+    }
+
+    const request = (async () => {
+      const response = await fetch(
+        `https://api.datasportsapi.com/v2/fixtures/${encodeURIComponent(matchId)}/scorecard`,
+        {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Accept": "application/json"
+          },
+          signal: AbortSignal.timeout(15000)
+        }
+      );
+
+      if (!response.ok) {
+        console.error("DataSportsAPI Scorecard status:", response.status);
+        throw new Error("Scorecard provider unavailable");
+      }
+
+      const result = await response.json();
+      dataSportsDailyUsage.calls += 1;
+
+      dataSportsScorecardCache.set(matchId, {
+        data: result,
+        expiresAt: Date.now() + 120000
+      });
+
+      return result;
+    })();
+
+    dataSportsScorecardInFlight.set(matchId, request);
+
+    const result = await request;
+
+    return res.json({
+      success: true,
+      cached: false,
+      data: result
+    });
+
+  } catch (error) {
+    console.error("DataSportsAPI Scorecard request failed");
+
+    return res.status(502).json({
+      success: false,
+      message: "Could not load cricket scorecard"
+    });
+
+  } finally {
+    dataSportsScorecardInFlight.delete(String(req.params.matchId || ""));
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
