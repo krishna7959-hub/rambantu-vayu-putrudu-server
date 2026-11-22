@@ -770,6 +770,131 @@ app.get("/cricket/scorecard/:matchId", async (req, res) => {
 });
 
 
+
+/* DATA SPORTS API - CRICKET LIVE SCORES */
+
+let dataSportsLiveCache = {
+  data: null,
+  expiresAt: 0
+};
+
+let dataSportsLiveInFlight = null;
+let dataSportsDailyUsage = {
+  day: new Date().toISOString().slice(0, 10),
+  calls: 0
+};
+
+app.get("/api/cricket/live", async (req, res) => {
+  try {
+    const now = Date.now();
+    const today = new Date().toISOString().slice(0, 10);
+
+    if (dataSportsDailyUsage.day !== today) {
+      dataSportsDailyUsage = { day: today, calls: 0 };
+    }
+
+    if (dataSportsLiveCache.data && now < dataSportsLiveCache.expiresAt) {
+      return res.json({
+        success: true,
+        cached: true,
+        data: dataSportsLiveCache.data
+      });
+    }
+
+    if (dataSportsLiveInFlight) {
+      const result = await dataSportsLiveInFlight;
+      return res.json({
+        success: true,
+        cached: true,
+        data: result
+      });
+    }
+
+    const apiKey = process.env.DATASPORTSAPI_API_KEY;
+
+    if (!apiKey) {
+      return res.status(503).json({
+        success: false,
+        message: "Live cricket service is not configured"
+      });
+    }
+
+    const dailyLimit = Math.min(
+      950,
+      Math.max(1, Number(process.env.DATASPORTSAPI_DAILY_LIMIT) || 90)
+    );
+
+    if (dataSportsDailyUsage.calls >= dailyLimit) {
+      if (dataSportsLiveCache.data) {
+        return res.json({
+          success: true,
+          cached: true,
+          quotaLimited: true,
+          data: dataSportsLiveCache.data
+        });
+      }
+
+      return res.status(429).json({
+        success: false,
+        message: "Daily cricket API request limit reached"
+      });
+    }
+
+    dataSportsLiveInFlight = (async () => {
+      const response = await fetch(
+        "https://api.datasportsapi.com/v2/livescores?sport=cricket",
+        {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Accept": "application/json"
+          },
+          signal: AbortSignal.timeout(15000)
+        }
+      );
+
+      if (!response.ok) {
+        console.error("DataSportsAPI Live Scores status:", response.status);
+        throw new Error("Live scores provider unavailable");
+      }
+
+      const result = await response.json();
+      dataSportsDailyUsage.calls += 1;
+
+      const interval = Math.max(
+        60000,
+        Number(process.env.DATASPORTSAPI_POLL_INTERVAL_MS) || 900000
+      );
+
+      dataSportsLiveCache = {
+        data: result,
+        expiresAt: Date.now() + interval
+      };
+
+      return result;
+    })();
+
+    const result = await dataSportsLiveInFlight;
+
+    return res.json({
+      success: true,
+      cached: false,
+      data: result
+    });
+
+  } catch (error) {
+    console.error("DataSportsAPI Live Scores request failed");
+
+    return res.status(502).json({
+      success: false,
+      message: "Could not load live cricket scores"
+    });
+
+  } finally {
+    dataSportsLiveInFlight = null;
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
