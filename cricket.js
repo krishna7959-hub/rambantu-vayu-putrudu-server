@@ -16,6 +16,7 @@ const scorecardSection = document.getElementById("scorecardSection");
 const scorecardStatus = document.getElementById("scorecardStatus");
 const scorecardContent = document.getElementById("scorecardContent");
 const backToResults = document.getElementById("backToResults");
+let scorecardReturnTab = "results";
 
 function makeElement(tag, className, text) {
   const element = document.createElement(tag);
@@ -280,6 +281,7 @@ async function loadScorecard(matchId) {
     return;
   }
 
+  scorecardReturnTab = "results";
   scorecardSection.hidden = false;
   scorecardContent.replaceChildren();
   scorecardStatus.textContent = "పూర్తి స్కోర్‌కార్డ్ లోడ్ అవుతోంది...";
@@ -330,13 +332,137 @@ if (refreshButton) {
 
 if (backToResults) {
   backToResults.addEventListener("click", () => {
-    scorecardSection.hidden = true;
-    if (panels.results) panels.results.hidden = false;
     scorecardContent.replaceChildren();
-    scorecardSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    showTab(scorecardReturnTab);
+    const returnPanel = panels[scorecardReturnTab];
+    if (returnPanel) {
+      returnPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   });
 }
 
+
+async function loadDataSportsScorecard(matchId, matchSummary) {
+  if (!matchId || !scorecardSection || !scorecardStatus || !scorecardContent) {
+    return;
+  }
+
+  scorecardReturnTab = "live";
+  showTab("live");
+  scorecardSection.hidden = false;
+  if (panels.live) panels.live.hidden = true;
+  scorecardContent.replaceChildren();
+  scorecardStatus.textContent = "పూర్తి స్కోర్‌కార్డ్ లోడ్ అవుతోంది...";
+  scorecardSection.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  try {
+    const response = await fetch(
+      `${API_BASE}/api/cricket/scorecard/${encodeURIComponent(matchId)}`,
+      { headers: { Accept: "application/json" } }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const payload = await response.json();
+    const matchData = payload?.data?.data;
+    const innings = matchData?.innings;
+
+    if (!Array.isArray(innings) || !innings.length) {
+      throw new Error("Scorecard innings missing");
+    }
+
+    const homeName = matchSummary?.home?.name || "Home";
+    const awayName = matchSummary?.away?.name || "Away";
+    scorecardStatus.textContent =
+      `${homeName} vs ${awayName} · ${matchSummary?.status?.description || "మ్యాచ్ స్కోర్‌కార్డ్"}`;
+
+    innings.forEach((inning, index) => {
+      const card = makeElement("section", "innings-card");
+      const teamName = inning.battingTeam?.name ||
+        (inning.battingSide === "home" ? homeName : awayName);
+
+      card.append(makeElement(
+        "h3",
+        "innings-heading",
+        `${teamName} — ${inning.runs ?? 0}/${inning.wickets ?? 0} (${inning.overs ?? "-"})`
+      ));
+
+      card.append(makeElement("h4", "", "బ్యాటింగ్ వివరాలు"));
+
+      const battingRows = (inning.batting || []).map(player => {
+        const batter = player.batter || {};
+        let dismissal = player.description || "నాటౌట్";
+
+        if (player.state === "didNotBat") dismissal = "బ్యాటింగ్ చేయలేదు";
+        else if (player.state === "notOut") dismissal = "నాటౌట్";
+        else if (player.bowler?.name && player.description) {
+          dismissal += ` · ${player.bowler.name}`;
+          if (player.fielder?.name) dismissal += ` (${player.fielder.name})`;
+        }
+
+        return [
+          batter.name || "-",
+          dismissal,
+          player.runs ?? 0,
+          player.balls ?? 0,
+          player.fours ?? 0,
+          player.sixes ?? 0,
+          player.strikeRate ?? "-"
+        ];
+      });
+
+      if (battingRows.length) {
+        addTable(card, ["బ్యాటర్", "వివరాలు", "R", "B", "4s", "6s", "SR"], battingRows);
+      } else {
+        card.append(makeElement("p", "", "బ్యాటింగ్ వివరాలు అందుబాటులో లేవు."));
+      }
+
+      card.append(makeElement("h4", "", "బౌలింగ్ వివరాలు"));
+
+      const bowlingRows = (inning.bowling || []).map(player => [
+        player.bowler?.name || "-",
+        player.overs ?? "-",
+        player.maidens ?? 0,
+        player.runs ?? 0,
+        player.wickets ?? 0,
+        player.economy ?? "-"
+      ]);
+
+      if (bowlingRows.length) {
+        addTable(card, ["బౌలర్", "O", "M", "R", "W", "Econ"], bowlingRows);
+      } else {
+        card.append(makeElement("p", "", "బౌలింగ్ వివరాలు అందుబాటులో లేవు."));
+      }
+
+      const extras = inning.extras || {};
+      const extrasText = [
+        `మొత్తం: ${extras.total ?? 0}`,
+        `వైడ్స్: ${extras.wides ?? 0}`,
+        `నోబాల్స్: ${extras.noBalls ?? 0}`,
+        `బైస్: ${extras.byes ?? 0}`,
+        `లెగ్‌బైస్: ${extras.legByes ?? 0}`
+      ].join(" · ");
+      card.append(makeElement("p", "scorecard-extra", `ఎక్స్‌ట్రాలు: ${extrasText}`));
+
+      const wickets = inning.fallOfWickets || [];
+      if (wickets.length) {
+        const wicketText = wickets.map(wicket =>
+          `${wicket.wicket ?? ""}వ వికెట్: ${wicket.runs ?? "-"} పరుగులు · ${wicket.batter?.name || ""} (${wicket.overs ?? "-"} ఓవర్లు)`
+        ).join(" | ");
+        card.append(makeElement("p", "scorecard-extra", `వికెట్ల పతనం: ${wicketText}`));
+      }
+
+      scorecardContent.append(card);
+    });
+
+  } catch (error) {
+    console.error("DataSportsAPI scorecard error:", error);
+    scorecardStatus.textContent =
+      "స్కోర్‌కార్డ్ లోడ్ కాలేదు. కొద్దిసేపటి తర్వాత మళ్లీ ప్రయత్నించండి.";
+  }
+}
 
 /* RVP DATASPORTS LIVE SCORE UI */
 
@@ -455,6 +581,21 @@ function createLiveCard(match, indiaMatch) {
   );
 
   card.append(top, teams, status, meta);
+
+  card.classList.add("live-score-clickable");
+  card.setAttribute("role", "button");
+  card.setAttribute("tabindex", "0");
+  card.setAttribute("aria-label", `${match.home?.name || ""} vs ${match.away?.name || ""} పూర్తి స్కోర్‌కార్డ్ చూడండి`);
+
+  const openScorecard = () => loadDataSportsScorecard(match.id, match);
+  card.addEventListener("click", openScorecard);
+  card.addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openScorecard();
+    }
+  });
+
   return card;
 }
 
