@@ -337,5 +337,209 @@ if (backToResults) {
   });
 }
 
+
+/* RVP DATASPORTS LIVE SCORE UI */
+
+const livePanel = document.getElementById("livePanel");
+const liveMessage = document.getElementById("liveMessage");
+const liveList = document.createElement("div");
+liveList.className = "live-match-list";
+if (liveMessage) liveMessage.insertAdjacentElement("afterend", liveList);
+
+let liveRefreshTimer = null;
+let liveLastUpdated = null;
+
+function isIndiaTeam(team) {
+  const name = String(team?.name || "").trim().toLowerCase();
+  const code = String(team?.code || team?.shortName || "").trim().toUpperCase();
+
+  return (
+    name === "india" ||
+    name.startsWith("india ") ||
+    code === "IND" ||
+    code === "IND-W" ||
+    code === "IND-A" ||
+    code === "IND U19"
+  );
+}
+
+function getTeamInnings(score) {
+  const innings = score?.innings || {};
+  return Object.entries(innings)
+    .filter(([, value]) => value && typeof value === "object")
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => ({
+      label: key.replace(/([a-z])([0-9])/i, "$1 $2"),
+      runs: value.runs ?? 0,
+      wickets: value.wickets ?? 0,
+      overs: value.overs
+    }));
+}
+
+function formatTeamScore(score) {
+  if (!score) return "స్కోరు లేదు";
+
+  const innings = getTeamInnings(score);
+
+  if (innings.length) {
+    return innings.map(item => {
+      const total = `${item.runs}/${item.wickets}`;
+      return item.overs !== null && item.overs !== undefined
+        ? `${total} (${item.overs})`
+        : total;
+    }).join("  ·  ");
+  }
+
+  return score.current !== null && score.current !== undefined
+    ? String(score.current)
+    : "స్కోరు లేదు";
+}
+
+function createLiveTeam(team, score, isIndia) {
+  const block = makeElement("div", "live-team");
+  const flag = makeElement("div", "live-team-flag", isIndia ? "🇮🇳" : "🏏");
+  const name = makeElement(
+    "div",
+    "live-team-name",
+    team?.shortName || team?.name || "జట్టు"
+  );
+  const fullName = makeElement(
+    "div",
+    "live-team-fullname",
+    team?.name || ""
+  );
+  const scoreText = makeElement(
+    "div",
+    "live-team-score",
+    formatTeamScore(score)
+  );
+
+  block.append(flag, name, fullName, scoreText);
+  return block;
+}
+
+function createLiveCard(match, indiaMatch) {
+  const card = makeElement(
+    "article",
+    indiaMatch ? "live-score-card india-live-card" : "live-score-card"
+  );
+
+  const top = makeElement("div", "live-card-top");
+  top.append(
+    makeElement("span", "live-league", match.league?.name || "క్రికెట్ మ్యాచ్"),
+    makeElement("span", "live-badge", "● LIVE")
+  );
+
+  const teams = makeElement("div", "live-score-teams");
+  teams.append(
+    createLiveTeam(match.home, match.homeScore, isIndiaTeam(match.home)),
+    makeElement("span", "live-vs", "VS"),
+    createLiveTeam(match.away, match.awayScore, isIndiaTeam(match.away))
+  );
+
+  const status = makeElement(
+    "div",
+    "live-innings-status",
+    match.status?.description || "మ్యాచ్ కొనసాగుతోంది"
+  );
+
+  const meta = makeElement(
+    "div",
+    "live-match-meta",
+    [
+      match.season?.name,
+      match.group,
+      match.venue?.name,
+      match.venue?.city
+    ].filter(Boolean).join(" · ")
+  );
+
+  card.append(top, teams, status, meta);
+  return card;
+}
+
+async function loadLiveScores() {
+  if (!liveList || !liveMessage) return;
+
+  liveMessage.textContent = "Live స్కోర్లు లోడ్ అవుతున్నాయి...";
+
+  try {
+    const response = await fetch(`${API_BASE}/api/cricket/live`, {
+      method: "GET",
+      headers: { Accept: "application/json" }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const payload = await response.json();
+    const matches = payload?.data?.data;
+
+    if (!Array.isArray(matches)) {
+      throw new Error("Invalid live score response");
+    }
+
+    const indiaMatches = matches.filter(match =>
+      isIndiaTeam(match.home) || isIndiaTeam(match.away)
+    );
+
+    const otherMatches = matches.filter(match =>
+      !isIndiaTeam(match.home) && !isIndiaTeam(match.away)
+    );
+
+    const orderedMatches = [...indiaMatches, ...otherMatches];
+
+    liveList.replaceChildren();
+
+    if (!orderedMatches.length) {
+      liveMessage.textContent = "ప్రస్తుతం Live మ్యాచ్‌లు అందుబాటులో లేవు.";
+    } else {
+      liveMessage.textContent = indiaMatches.length
+        ? `🇮🇳 భారత్ మ్యాచ్‌లు: ${indiaMatches.length} · మొత్తం Live మ్యాచ్‌లు: ${matches.length}`
+        : `ప్రస్తుతం భారత్ Live మ్యాచ్ లేదు · ఇతర Live మ్యాచ్‌లు: ${matches.length}`;
+
+      orderedMatches.forEach(match => {
+        const indiaMatch =
+          isIndiaTeam(match.home) || isIndiaTeam(match.away);
+        liveList.append(createLiveCard(match, indiaMatch));
+      });
+    }
+
+    liveLastUpdated = new Date();
+
+  } catch (error) {
+    console.error("RVP Live cricket error:", error);
+    liveMessage.textContent =
+      "Live స్కోర్లు ప్రస్తుతం అందుబాటులో లేవు. కొద్దిసేపటి తర్వాత మళ్లీ ప్రయత్నించండి.";
+  }
+}
+
+function startLiveRefresh() {
+  if (liveRefreshTimer) clearInterval(liveRefreshTimer);
+
+  loadLiveScores();
+
+  liveRefreshTimer = setInterval(() => {
+    if (document.visibilityState === "visible") {
+      loadLiveScores();
+    }
+  }, 900000);
+}
+
+tabs.forEach(tab => {
+  if (tab.dataset.tab === "live") {
+    tab.addEventListener("click", () => {
+      if (!liveLastUpdated ||
+          Date.now() - liveLastUpdated.getTime() > 900000) {
+        loadLiveScores();
+      }
+    });
+  }
+});
+
+startLiveRefresh();
+
+
 showTab("results");
 loadResults();
